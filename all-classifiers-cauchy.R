@@ -2,7 +2,7 @@
 library(doParallel)
 library(magrittr)
 
-start.time <- proc.time()
+# start.time <- proc.time()
 
 no.cores <- round(detectCores()*0.70)
 cl <- makeCluster(spec = no.cores, type = 'PSOCK')
@@ -114,10 +114,10 @@ for(u in 1:5){
    ns <- 100
    ms <- 100
    
-   d <- 500
+   d <- 5000
    
    X <- matrix(rcauchy((n+ns)*d, 2, 1), nrow = n+ns, ncol = d, byrow = TRUE)
-   Y <- matrix(rcauchy((m+ms)*d, 3, 1), nrow = m+ms, ncol = d, byrow = TRUE)
+   Y <- matrix(rcauchy((m+ms)*d, 20, 1), nrow = m+ms, ncol = d, byrow = TRUE)
    
    Z <- rbind(X[(n+1):(n+ns),], Y[(m+1):(m+ms),])     ## Test Observations
    
@@ -214,7 +214,7 @@ for(u in 1:5){
 error.prop.mean <- list(mean(error.prop.1), mean(error.prop.2), mean(error.prop.3))
 error.prop.sd <- list(sd(error.prop.1), sd(error.prop.2), sd(error.prop.3))
 
-exec.time <- proc.time() - start.time
+# exec.time <- proc.time() - start.time
 
 print("Cauchy")
 print(exec.time)

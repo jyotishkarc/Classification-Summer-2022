@@ -8,17 +8,29 @@ no.cores <- round(detectCores()*0.70)
 cl <- makeCluster(spec = no.cores, type = 'PSOCK')
 registerDoParallel(cl)
 
-rho.0 <- function(a,b,c){
+# rho <- function(a,b,c){
+#    if (prod(a == c)== 1 || prod(b == c) == 1){
+#       return(0)
+#    }else{
+#       return(acos(sum((a-c)*(b-c)) / sqrt(sum((a-c)^2) * sum((b-c)^2))) / pi)
+#    }
+# }
+
+rho <- function(a,b,c){
    if (prod(a == c)== 1 || prod(b == c) == 1){
       return(0)
    }else{
-      return(acos(sum((a-c)*(b-c)) / sqrt(sum((a-c)^2) * sum((b-c)^2))) / pi)
+      temp <- sign((a-c) * (b-c))
+      return(temp %>% replace(temp == -1, 0) %>% mean())
    }
 }
 
-rho.hat <- function(){
-   ## There's nothing here
-}
+
+
+
+# rho.hat <- function(){
+#    ## There's nothing here
+# }
 
 
 error.prop <- c()
@@ -39,7 +51,7 @@ classify.parallel <- function(Z, X, Y, T.FF, T.GG, T.FG, W, S_FG){
       j <- vec[2]
       
       return(sum(sapply(1:(n+m),function(val){
-                                    rho.0(Z[i,],X[j,],Q[val,])
+                                    rho(Z[i,],X[j,],Q[val,])
       })))
    }
    
@@ -56,7 +68,7 @@ classify.parallel <- function(Z, X, Y, T.FF, T.GG, T.FG, W, S_FG){
       j <- vec[2]
       
       return(sum(sapply(1:(n+m),function(val){
-                                    rho.0(Z[i,],Y[j,],Q[val,])
+                                    rho(Z[i,],Y[j,],Q[val,])
       })))
    }
    
@@ -103,7 +115,9 @@ classify.parallel <- function(Z, X, Y, T.FF, T.GG, T.FG, W, S_FG){
 }
 
 
+clusterEvalQ(cl, {library(magrittr)})
 clusterExport(cl, ls())
+
 
 # t1 <- proc.time()
 error.prop.1 <- error.prop.2 <- error.prop.3 <- c()
@@ -114,10 +128,10 @@ for(u in 1:5){
    ns <- 100
    ms <- 100
    
-   d <- 5000
+   d <- 500*2
    
    X <- matrix(rcauchy((n+ns)*d, 2, 1), nrow = n+ns, ncol = d, byrow = TRUE)
-   Y <- matrix(rcauchy((m+ms)*d, 20, 1), nrow = m+ms, ncol = d, byrow = TRUE)
+   Y <- matrix(rcauchy((m+ms)*d, 2, 3), nrow = m+ms, ncol = d, byrow = TRUE)
    
    Z <- rbind(X[(n+1):(n+ns),], Y[(m+1):(m+ms),])     ## Test Observations
    
@@ -134,7 +148,7 @@ for(u in 1:5){
       j <- vec[2]
       
       return(sum(sapply(1:(n+m),function(val){
-         rho.0(X[i,],Y[j,],Q[val,])
+         rho(X[i,],Y[j,],Q[val,])
       })))
    }
    
@@ -159,7 +173,7 @@ for(u in 1:5){
       j <- vec[2]
       
       return(sum(sapply(1:(n+m),function(val){
-                                    rho.0(X[i,],X[j,],Q[val,])
+                                    rho(X[i,],X[j,],Q[val,])
       })))
    }
    
@@ -176,7 +190,7 @@ for(u in 1:5){
       j <- vec[2]
       
       return(sum(sapply(1:(n+m),function(val){
-                                    rho.0(Y[i,],Y[j,],Q[val,])
+                                    rho(Y[i,],Y[j,],Q[val,])
       })))
    }
    

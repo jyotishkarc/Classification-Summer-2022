@@ -35,8 +35,6 @@ rho <- function(a,b,c){
 }
 
 
-
-
 # rho.hat <- function(){
 #    ## There's nothing here
 # }
@@ -128,7 +126,7 @@ clusterEvalQ(cl, {library(magrittr)})
 clusterExport(cl, ls())
 
 
-print("Cauchy(0,1) vs Cauchy(0,2)")
+print("N(0,3) vs t_3")
 
 
 iterations <- 100
@@ -161,8 +159,15 @@ for(k in 1:length(d.seq)){
       
       set.seed(u)
       
-      X <- matrix(rcauchy((n+ns)*d, 0, 1), nrow = n+ns, ncol = d, byrow = TRUE)
-      Y <- matrix(rcauchy((m+ms)*d, 0, 2), nrow = m+ms, ncol = d, byrow = TRUE)
+      X <- matrix(rnorm((n + ns) * d, 0, sqrt(3)),
+                  nrow = n + ns,
+                  ncol = d,
+                  byrow = TRUE)
+      
+      Y <- matrix(rt((m + ms) * d, df = 3),
+                  nrow = m + ms,
+                  ncol = d,
+                  byrow = TRUE)
       
       Z <- rbind(X[(n+1):(n+ns),], Y[(m+1):(m+ms),])     ## Test Observations
       
@@ -190,7 +195,7 @@ for(k in 1:length(d.seq)){
       
       T.FG <- index.mat %>% 
          parApply(cl, ., 1, T.FG.rho.fun) %>%
-            matrix(nrow = n, ncol = m, byrow = T) %>% sum() / ((n+m-2)*n*m)
+         matrix(nrow = n, ncol = m, byrow = T) %>% sum() / ((n+m-2)*n*m)
       
       
       #####
@@ -262,8 +267,15 @@ for(k in 1:length(d.seq)){
       {
          set.seed(u)
          
-         X <- matrix(rcauchy((n+ns)*d, 0, 1), nrow = n+ns, ncol = d, byrow = TRUE)
-         Y <- matrix(rcauchy((m+ms)*d, 0, 2), nrow = m+ms, ncol = d, byrow = TRUE)
+         X <- matrix(rnorm((n + ns) * d, 0, sqrt(3)),
+                     nrow = n + ns,
+                     ncol = d,
+                     byrow = TRUE)
+         
+         Y <- matrix(rt((m + ms) * d, df = 3),
+                     nrow = m + ms,
+                     ncol = d,
+                     byrow = TRUE)
          
          test.sample <- Z <- rbind(X[(n + 1):(n + ns),],
                                    Y[(m + 1):(m + ms),])   ## Test Observations
@@ -432,11 +444,11 @@ for(k in 1:length(d.seq)){
          ################################ Bayes Risk
          
          mdl.bayes.X <- apply(test.sample, 1, function(val){
-            return(sum(dcauchy(val, 0, 1, log = T)))
+            return(sum(dnorm(val, 0, sqrt(3), log = T)))
          })
          
          mdl.bayes.Y <- apply(test.sample, 1, function(val){
-            return(sum(dcauchy(val, 0, 2, log = T)))
+            return(sum(dt(val, df = 3, log = T)))
          })
          
          G <- as.numeric(mdl.bayes.X > mdl.bayes.Y)
@@ -493,10 +505,10 @@ for(k in 1:length(d.seq)){
 #                       sd(error.prop.2), 
 #                       sd(error.prop.3))
 
-# res.list.C01.vs.C02 <- list("d=5" = res.list[[1]],
+# res.list.C01.vs.C11 <- list("d=5" = res.list[[1]],
 #                             "d=10" = res.list[[2]])
 
-res.list.C01.vs.C02 <- list("d=5" = res.list[[1]],
+res.list.N03.vs.t3 <- list("d=5" = res.list[[1]],
                             "d=10" = res.list[[2]],
                             "d=25" = res.list[[3]],
                             "d=50" = res.list[[4]],
@@ -505,8 +517,8 @@ res.list.C01.vs.C02 <- list("d=5" = res.list[[1]],
                             "d=500" = res.list[[7]],
                             "d=1000" = res.list[[8]])
 
-writexl::write_xlsx(x = res.list.C01.vs.C02,
-                    path = "C:\\Users\\JYOTISHKA\\Desktop\\all-C01-vs-C02.xlsx")
+writexl::write_xlsx(x = res.list.N03.vs.t3,
+                    path = "C:\\Users\\JYOTISHKA\\Desktop\\all-N03-vs-t3.xlsx")
 
 # writexl::write_xlsx(x = res.list.C01.vs.C02,
 #                     path = "E:\\Jyotishka\\Code\\Pop-C01-vs-C02-with-nn.xlsx")

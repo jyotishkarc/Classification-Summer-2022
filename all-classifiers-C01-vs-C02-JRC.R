@@ -29,7 +29,7 @@ rho <- function(a,b,c){
    if (prod(a == c)== 1 || prod(b == c) == 1){
       return(0)
    }else{
-      temp <- sign((a-c) * (b-c))
+      temp <- sign((a-c) * (b-c)) * (-1)
       return(temp %>% replace(temp == -1, 0) %>% mean())
    }
 }

@@ -119,19 +119,10 @@ clusterEvalQ(cl, {library(magrittr)})
 clusterExport(cl, ls())
 
 
-iterations <- 50
-
-n <- 20
-m <- 20
-ns <- 100
-ms <- 100
-
-d.seq <- c(5,10,25,50,100,250,500,1000)
-
 # t1 <- proc.time()
 error.prop.1 <- error.prop.2 <- error.prop.3 <- c()
 
-for(u in 1:iterations){
+for(u in 1:5){
    n <- 20
    m <- 20
    ns <- 100
@@ -234,13 +225,8 @@ for(u in 1:iterations){
    # print((proc.time() - t1)/u) #avgtime required per iteration
 }
 
-error.prop.mean <- list(mean(error.prop.1), 
-                        mean(error.prop.2), 
-                        mean(error.prop.3))
-
-error.prop.sd <- list(sd(error.prop.1), 
-                      sd(error.prop.2), 
-                      sd(error.prop.3))
+error.prop.mean <- list(mean(error.prop.1), mean(error.prop.2), mean(error.prop.3))
+error.prop.sd <- list(sd(error.prop.1), sd(error.prop.2), sd(error.prop.3))
 
 # exec.time <- proc.time() - start.time
 

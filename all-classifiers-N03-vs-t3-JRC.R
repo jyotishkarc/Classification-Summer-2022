@@ -82,7 +82,7 @@ classify.parallel <- function(Z, X, Y, T.FF, T.GG, T.FG, W, S_FG){
    index.mat <- cbind(rep(1:R, each = m),rep(1:m, times = R))
    
    T_GZ <- index.mat %>%
-      parApply(cl, ., 1, T_FZ.rho.fun) %>%
+      parApply(cl, ., 1, T_GZ.rho.fun) %>%
       matrix(nrow = R, ncol = m, byrow = TRUE) %>% 
       rowMeans() / (n+m-1)
    

@@ -113,6 +113,24 @@ classify.parallel <- function(Z, X, Y, T.FF, T.GG, T.FG, W, S_FG){
 
 #################
 
+labels.rename <- function(X){
+   
+   X <- as.matrix(X)
+   
+   if (length(setdiff(unique(X[,1]), 1:length(unique(X[,1])))) == 0) {
+      return(X)
+   }
+   
+   original.labels <- X[,1] %>% as.character()
+   new.label.names <- 1 : length(unique(original.labels))
+   
+   X[,1] <- new.label.names[as.factor(original.labels)] %>% as.numeric()
+   
+   return(X)
+}
+
+#################
+
 clusterEvalQ(cl, {library(magrittr)})
 clusterExport(cl, ls())
 
@@ -121,23 +139,24 @@ print("Hello")
 
 iterations <- 50
 
-path <- "G:/Datasets/Classification Datasets/"
-# path <- "..."
+# path <- "G:/Datasets/Classification Datasets/"
+path <- "E:/JRC-2022/Classification-Summer-2022-JRC/Datasets/UCR/"
 
 UCR.summary <- read.csv(paste0(path,"UCR-DataSummary.csv"), stringsAsFactors = FALSE)
-files.TwoClass <- ucr.summary$Name[which(UCR.summary$Class == 2)]
+files.TwoClass <- UCR.summary$Name[which(UCR.summary$Class == 2)]
 
 path.UCR <- paste0(path,"UCRArchive_2018/")
 files.UCR <- list.files(path.UCR)
 
 
-for(h in 1:3){ #length(files.TwoClass)){
+for(h in 4:length(files.TwoClass)){
    
    print(h)
    print(files.TwoClass[h])
    print(Sys.time())
    
-   start.time <- proc.time()
+   start.time.sys <- Sys.time()
+   start.time.proc <- proc.time()
    
    init.train.data <- read.delim(paste0(path.UCR, 
                                         files.TwoClass[h], "/",
@@ -151,7 +170,7 @@ for(h in 1:3){ #length(files.TwoClass)){
                                 header = FALSE, 
                                 stringsAsFactors = FALSE)
    
-   dataset <- rbind(init.train.data, init.test.data)
+   dataset <- rbind(init.train.data, init.test.data) %>% as.matrix() %>% labels.rename()
    
    print("Dataset extracted")
    
@@ -180,16 +199,13 @@ for(h in 1:3){ #length(files.TwoClass)){
    
    for(u in 1:iterations){
       
-      if(u %% 4 == 0) print(u)
-      start.time <- proc.time()
+      if(u %% 1 == 0) print(u)
       
       X <- dataset[which(dataset[train.index[[u]],1] == 1), -1]
       Y <- dataset[which(dataset[train.index[[u]],1] == 2), -1]
       Q <- rbind(X,Y)
       
       Z <- dataset[test.index[[u]], -1]     ## Test Observations
-      
-      # if (u %% 1 == 0) {print(u)}
       
       n <- nrow(X)
       m <- nrow(Y)
@@ -256,7 +272,7 @@ for(h in 1:3){ #length(files.TwoClass)){
       
       
       ########## Test Observations
-      
+      ♦
       ground.label <- ground.truth[test.index[[u]]]
       
       clusterExport(cl, c('Z'))
@@ -267,6 +283,8 @@ for(h in 1:3){ #length(files.TwoClass)){
       error.prop.2[u] <- length(which(ground.label != prac.label[[2]])) / nrow(Z)
       error.prop.3[u] <- length(which(ground.label != prac.label[[3]])) / nrow(Z)
    }
+   
+   print(Sys.time() - start.time.sys)
    
    ############################################## Our Classifiers END
    #
@@ -460,8 +478,8 @@ for(h in 1:3){ #length(files.TwoClass)){
       }
    
    ############################################## Popular Classifiers END
-
-      
+   
+   
    result.all <- cbind(error.prop.1, error.prop.2, error.prop.3,
                        as.data.frame(result)) %>% as.data.frame()
    
@@ -480,15 +498,17 @@ for(h in 1:3){ #length(files.TwoClass)){
                      apply(result.all, 2, mean), 
                      apply(result.all, 2, sciplot::se))
    
-   result.folder.path <- "C:\\Users\\JYOTISHKA\\Desktop\\UCR-TwoClass-Results\\"
+   # result.folder.path <- "C:\\Users\\JYOTISHKA\\Desktop\\UCR-TwoClass-Results\\"
    
-   # result.folder.path <- "E:\\JRC-2022\\Classification-Summer-2022-JRC\\Results\\Real\\UCR\\TwoClass\\"
+   result.folder.path <- "E:\\JRC-2022\\Classification-Summer-2022-JRC\\Results\\Real\\UCR\\TwoClass\\"
    
    print(h)
-   print(files[h])
+   print(files.TwoClass[h])
    
    write_xlsx(x = res.list,
               path = paste0(result.folder.path, files.TwoClass[h],".xlsx"))
+   
+   print(Sys.time() - start.time)
    
    end.time <- proc.time()[3]- start.time
    print(end.time)

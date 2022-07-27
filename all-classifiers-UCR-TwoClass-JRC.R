@@ -134,6 +134,26 @@ labels.rename <- function(X){
 clusterEvalQ(cl, {library(magrittr)})
 clusterExport(cl, ls())
 
+#################
+
+JMLR.UCR <- c("FiftyWords","ACSF1","Adiac","Arrowhead","Beef","BeetleFly",
+              "BirdChicken","Car","CBF","CinCECGtorso","Coffee","Computers",
+              "CricketX","CricketY","DiatomSizeReduction","DistalPhalanxOutlineAgeGroup",
+              "DistalPhalanxOutlineCorrect","DistalPhalanxTW","Earthquakes","ECG200",
+              "ECGFiveDays","EOGHorizontalSignal","EOGVerticalSignal","EthanolLevel",
+              "FaceFour","FISH","GunPoint1","Ham","Handoutlines","Haptics","Herring",
+              "HouseTwenty","InlineSkate","InsectEPGRegularTrain","ItalyPowerDemand",
+              "LargeKitchenAppliances","Lighting2","Lighting7","MEAT","MedicalImages",
+              "MiddlePhalanxOutlineAgeGroup","MiddlePhalanxOutlineCorrect",
+              "MiddlePhalanxTW","MoteStrain","OliveOil","OSUleaf","PigAirwayPressure",
+              "PigArtPressure","PigCVP","Plane","ProximalPhalanxOutlineAgeGroup",
+              "ProximalPhalanxOutlineCorrect","ProximalPhalanxTW","RefrigerationDevices",
+              "ScreenType","ShapeletSim","ShapesAll","SmallKitchenAppliances",
+              "SonyAIBORobotSurface","SonyAIBORobotSurfaceII","Strawberry","SwedishLeaf",
+              "syntheticcontrol","ToeSegmentation1","ToeSegmentation2","Trace",
+              "TwoLeadECG","Wine","WordsSynonyms","Worms1","WormsTwoClass")
+
+#################
 
 print("Hello")
 
@@ -144,6 +164,8 @@ path <- "E:/JRC-2022/Classification-Summer-2022-JRC/Datasets/UCR/"
 
 UCR.summary <- read.csv(paste0(path,"UCR-DataSummary.csv"), stringsAsFactors = FALSE)
 files.TwoClass <- UCR.summary$Name[which(UCR.summary$Class == 2)]
+
+files.TwoClass <- intersect(JMLR.UCR,files.TwoClass)
 
 path.UCR <- paste0(path,"UCRArchive_2018/")
 files.UCR <- list.files(path.UCR)
@@ -518,23 +540,6 @@ for(h in 5:length(files.TwoClass)){
 stopCluster(cl)
 gc()
 
-
-JMLR.UCR <- c("FiftyWords","ACSF1","Adiac","Arrowhead","Beef","BeetleFly",
-              "BirdChicken","Car","CBF","CinCECGtorso","Coffee","Computers",
-              "CricketX","CricketY","DiatomSizeReduction","DistalPhalanxOutlineAgeGroup",
-              "DistalPhalanxOutlineCorrect","DistalPhalanxTW","Earthquakes","ECG200",
-              "ECGFiveDays","EOGHorizontalSignal","EOGVerticalSignal","EthanolLevel",
-              "FaceFour","FISH","GunPoint1","Ham","Handoutlines","Haptics","Herring",
-              "HouseTwenty","InlineSkate","InsectEPGRegularTrain","ItalyPowerDemand",
-              "LargeKitchenAppliances","Lighting2","Lighting7","MEAT","MedicalImages",
-              "MiddlePhalanxOutlineAgeGroup","MiddlePhalanxOutlineCorrect",
-              "MiddlePhalanxTW","MoteStrain","OliveOil","OSUleaf","PigAirwayPressure",
-              "PigArtPressure","PigCVP","Plane","ProximalPhalanxOutlineAgeGroup",
-              "ProximalPhalanxOutlineCorrect","ProximalPhalanxTW","RefrigerationDevices",
-              "ScreenType","ShapeletSim","ShapesAll","SmallKitchenAppliances",
-              "SonyAIBORobotSurface","SonyAIBORobotSurfaceII","Strawberry","SwedishLeaf",
-              "syntheticcontrol","ToeSegmentation1","ToeSegmentation2","Trace",
-              "TwoLeadECG","Wine","WordsSynonyms","Worms1","WormsTwoClass")
 
 
 

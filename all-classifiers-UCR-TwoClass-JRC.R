@@ -149,7 +149,7 @@ path.UCR <- paste0(path,"UCRArchive_2018/")
 files.UCR <- list.files(path.UCR)
 
 
-for(h in 4:length(files.TwoClass)){
+for(h in 5:length(files.TwoClass)){
    
    print(h)
    print(files.TwoClass[h])
@@ -272,7 +272,7 @@ for(h in 4:length(files.TwoClass)){
       
       
       ########## Test Observations
-      ♦
+      
       ground.label <- ground.truth[test.index[[u]]]
       
       clusterExport(cl, c('Z'))
@@ -508,15 +508,34 @@ for(h in 4:length(files.TwoClass)){
    write_xlsx(x = res.list,
               path = paste0(result.folder.path, files.TwoClass[h],".xlsx"))
    
-   print(Sys.time() - start.time)
+   print(Sys.time() - start.time.sys)
    
-   end.time <- proc.time()[3]- start.time
+   end.time <- proc.time()[3]- start.time.proc
    print(end.time)
 }
 
 
 stopCluster(cl)
 gc()
+
+
+JMLR.UCR <- c("FiftyWords","ACSF1","Adiac","Arrowhead","Beef","BeetleFly",
+              "BirdChicken","Car","CBF","CinCECGtorso","Coffee","Computers",
+              "CricketX","CricketY","DiatomSizeReduction","DistalPhalanxOutlineAgeGroup",
+              "DistalPhalanxOutlineCorrect","DistalPhalanxTW","Earthquakes","ECG200",
+              "ECGFiveDays","EOGHorizontalSignal","EOGVerticalSignal","EthanolLevel",
+              "FaceFour","FISH","GunPoint1","Ham","Handoutlines","Haptics","Herring",
+              "HouseTwenty","InlineSkate","InsectEPGRegularTrain","ItalyPowerDemand",
+              "LargeKitchenAppliances","Lighting2","Lighting7","MEAT","MedicalImages",
+              "MiddlePhalanxOutlineAgeGroup","MiddlePhalanxOutlineCorrect",
+              "MiddlePhalanxTW","MoteStrain","OliveOil","OSUleaf","PigAirwayPressure",
+              "PigArtPressure","PigCVP","Plane","ProximalPhalanxOutlineAgeGroup",
+              "ProximalPhalanxOutlineCorrect","ProximalPhalanxTW","RefrigerationDevices",
+              "ScreenType","ShapeletSim","ShapesAll","SmallKitchenAppliances",
+              "SonyAIBORobotSurface","SonyAIBORobotSurfaceII","Strawberry","SwedishLeaf",
+              "syntheticcontrol","ToeSegmentation1","ToeSegmentation2","Trace",
+              "TwoLeadECG","Wine","WordsSynonyms","Worms1","WormsTwoClass")
+
 
 
 

@@ -162,8 +162,8 @@ iterations <- 50
 # path <- "G:/Datasets/Classification Datasets/"
 path <- "E:/JRC-2022/Classification-Summer-2022-JRC/Datasets/UCR/"
 
-UCR.summary <- read.csv(paste0(path,"UCR-DataSummary.csv"), stringsAsFactors = FALSE)
-files.TwoClass <- UCR.summary$Name[which(UCR.summary$Class == 2)]
+UCR.stats <- read.csv(paste0(path,"UCR-DataSummary.csv"), stringsAsFactors = FALSE)
+files.TwoClass <- UCR.stats$Name[which(UCR.stats$Class == 2)]
 
 files.TwoClass <- intersect(JMLR.UCR,files.TwoClass)
 

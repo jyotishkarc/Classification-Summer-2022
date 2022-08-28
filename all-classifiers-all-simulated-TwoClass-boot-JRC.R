@@ -7,41 +7,46 @@ library(readxl)
 library(writexl)
 library(EnvStats)
 
-##########################################################
-no.cores <- round(detectCores()*0.75)                 ####
-cl <- makeCluster(spec = no.cores, type = 'PSOCK')    ####
-registerDoParallel(cl)                                ####
-##########################################################
+################################################################
+no.cores <- round(detectCores()*0.75)                       ####
+cl <- makeCluster(spec = no.cores, type = 'PSOCK')          ####
+registerDoParallel(cl)                                      ####
+################################################################
 
 # path.wrong.results <- "C:/Users/JYOTISHKA/Desktop/all-classifiers-TwoClass-simulated-old/"
 # path.new.results <- "C:\\Users\\JYOTISHKA\\Desktop\\all-classifiers-TwoClass-simulated-new\\"
 
 path.wrong.results <- "E:/JRC-2022/Classification-Summer-2022-JRC/Results/Simulated/"
-path.new.results <- "E:\\JRC-2022\\Classification-Summer-2022-JRC\\Results\\Simulated\\NEW\\"
+path.newest.results <- "E:\\JRC-2022\\Classification-Summer-2022-JRC\\Results\\Simulated\\NEWEST\\"
 
 files.wrong <- list.files(path.wrong.results)
 
-#################
-rho <- function(a,b,q){
-   if (prod(a == q)== 1 || prod(b == q) == 1){
-      return(0)
-   }else{
-      temp <- sign((a-q) * (b-q)) * (-1)
-      return(temp %>% replace(temp == -1, 0) %>% mean())
-   }
-}
-#################
+################################################################
+rho <- function(a,b,q){                                     ####
+   if (prod(a == q)== 1 || prod(b == q) == 1){              ####
+      return(0)                                             ####
+   }else{                                                   ####
+      temp <- sign((a-q) * (b-q)) * (-1)                    ####
+      return(temp %>% replace(temp == -1, 0) %>% mean())    ####
+   }                                                        ####
+}                                                           ####
+################################################################
 
-classify.parallel <- function(Z, X, Y, T.FF, T.GG, T.FG, W, S_FG){
+###################################################################### Classifiers
+classify.parallel <- function(Z, X, Y, B, T.FF, T.GG, T.FG, W, S_FG){
    # print("Classification starting")
    R <- nrow(Z)
    Q <- rbind(X,Y)
    n <- nrow(X)
    m <- nrow(Y)
+   M <- nrow(B)
    
    clusterExport(cl, c('R','n','m'), envir = environment())
    
    
+   ########################################### T_FZ
+   
+   ##### T_FZ.rho.fun
    T_FZ.rho.fun <- function(vec){
       i <- vec[1]
       j <- vec[2]
@@ -56,9 +61,30 @@ classify.parallel <- function(Z, X, Y, T.FF, T.GG, T.FG, W, S_FG){
    T_FZ <- index.mat %>%
       parApply(cl, ., 1, T_FZ.rho.fun) %>%
       matrix(nrow = R, ncol = n, byrow = TRUE) %>% 
-      rowMeans() / (n+m-1)
+      rowMeans() / (n+m)
    
    
+   ##### T_FZ.rho.boot
+   T_FZ.rho.boot <- function(vec){
+      i <- vec[1]
+      j <- vec[2]
+      
+      return(sum(sapply(1:M,function(val){
+         rho(Z[i,],X[j,],B[val,])
+      })))
+   }
+   
+   index.mat <- cbind(rep(1:R, each = n),rep(1:n, times = R))
+   
+   T_FZ.boot <- index.mat %>%
+      parApply(cl, ., 1, T_FZ.rho.boot) %>%
+      matrix(nrow = R, ncol = n, byrow = TRUE) %>% 
+      rowMeans() / M
+   
+   
+   ########################################### T_FZ
+   
+   ##### T_GZ.rho.fun
    T_GZ.rho.fun <- function(vec){
       i <- vec[1]
       j <- vec[2]
@@ -73,42 +99,81 @@ classify.parallel <- function(Z, X, Y, T.FF, T.GG, T.FG, W, S_FG){
    T_GZ <- index.mat %>%
       parApply(cl, ., 1, T_GZ.rho.fun) %>%
       matrix(nrow = R, ncol = m, byrow = TRUE) %>% 
-      rowMeans() / (n+m-1)
+      rowMeans() / (n+m)
+   
+   
+   ##### T_GZ.rho.boot
+   T_GZ.rho.boot <- function(vec){
+      i <- vec[1]
+      j <- vec[2]
+      
+      return(sum(sapply(1:M,function(val){
+         rho(Z[i,],Y[j,],B[val,])
+      })))
+   }
+   
+   index.mat <- cbind(rep(1:R, each = m),rep(1:m, times = R))
+   
+   T_GZ.boot <- index.mat %>%
+      parApply(cl, ., 1, T_GZ.rho.boot) %>%
+      matrix(nrow = R, ncol = m, byrow = TRUE) %>% 
+      rowMeans() / M
+   
    
    
    L_FZ <- T_FZ - rep(T.FF, R)/2
    L_GZ <- T_GZ - rep(T.GG, R)/2
-   
    S_Z <- L_FZ + L_GZ - T.FG
+   
+   L_FZ.boot <- T_FZ.boot - rep(T.FF.boot, R)/2
+   L_GZ.boot <- T_GZ.boot - rep(T.GG.boot, R)/2
+   S_Z.boot <- L_FZ.boot + L_GZ.boot - T.FG.boot
    
    W0_FG <- W[[1]]
    # W1_FG <- W[[2]]
    # W2_FG <- W[[3]]
    
-   prac.label.1 <- prac.label.2 <- prac.label.3 <- rep(0, R)
+   W0_FG.boot <- W.boot[[1]]
+   # W1_FG.boot <- W.boot[[2]]
+   # W2_FG.boot <- W.boot[[3]]
+   
+   prac.label.1 <- prac.label.2 <- prac.label.3 <- 
+      prac.label.1.boot <- prac.label.2.boot <- prac.label.3.boot <- rep(0, R)
    
    #### CLASSIFIER 1
    delta1_Z <- L_GZ - L_FZ
+   delta1_Z.boot <- L_GZ.boot - L_FZ.boot
    
    prac.label.1[which(delta1_Z > 0)] <- 1
+   prac.label.1.boot[which(delta1_Z.boot > 0)] <- 1
    prac.label.1[which(delta1_Z <= 0)] <- 2
+   prac.label.1.boot[which(delta1_Z.boot <= 0)] <- 2
    
    #### CLASSIFIER 2
    delta2_Z <- W0_FG * delta1_Z + S_FG * S_Z
+   delta2_Z.boot <- W0_FG.boot * delta1_Z.boot + S_FG.boot * S_Z.boot
    
    prac.label.2[which(delta2_Z > 0)] <- 1
+   prac.label.2.boot[which(delta2_Z.boot > 0)] <- 1
    prac.label.2[which(delta2_Z <= 0)] <- 2
+   prac.label.2.boot[which(delta2_Z.boot <= 0)] <- 2
    
    #### CLASSIFIER 3
    delta3_Z <- W0_FG * sign(delta1_Z) + S_FG * sign(S_Z)
+   delta3_Z.boot <- W0_FG.boot * sign(delta1_Z.boot) + S_FG.boot * sign(S_Z.boot)
    
    prac.label.3[which(delta3_Z > 0)] <- 1
+   prac.label.3.boot[which(delta3_Z.boot > 0)] <- 1
    prac.label.3[which(delta3_Z <= 0)] <- 2
+   prac.label.3.boot[which(delta3_Z.boot <= 0)] <- 2
    
-   prac.label <- list(prac.label.1, prac.label.2, prac.label.3)
+   prac.label <- list(prac.label.1, prac.label.2, prac.label.3,
+                      prac.label.1.boot, prac.label.2.boot, prac.label.3.boot)
    
    return(prac.label)
 }
+##################################################################################
+
 
 # iterations <- 100
 
@@ -116,6 +181,8 @@ n <- 20
 m <- 20
 ns <- 100
 ms <- 100
+
+M <- 1000
 
 d.seq <- c(5,10,25,50,100,250,500,1000)
 
@@ -153,7 +220,7 @@ for(h in 1:length(files.wrong)){
          ns <- 100
          ms <- 100
          
-         M <- 1000
+         # M <- 1000
          
          if(u %% 5 == 0) {print(u)}
          
@@ -215,7 +282,7 @@ for(h in 1:length(files.wrong)){
          
          
          clusterEvalQ(cl, {library(magrittr)})
-         clusterExport(cl, c('X','Y','Q','B','n','m','rho'))
+         clusterExport(cl, c('X','Y','Q','B','n','m','M','rho'))
          
          
          ########################################### T.FG
@@ -357,14 +424,25 @@ for(h in 1:length(files.wrong)){
          error.prop.1[u] <- length(which(ground.label != prac.label[[1]])) / (ns + ms)
          error.prop.2[u] <- length(which(ground.label != prac.label[[2]])) / (ns + ms)
          error.prop.3[u] <- length(which(ground.label != prac.label[[3]])) / (ns + ms)
+         
+         error.prop.1.boot[u] <- length(which(ground.label != prac.label[[4]])) / (ns + ms)
+         error.prop.2.boot[u] <- length(which(ground.label != prac.label[[5]])) / (ns + ms)
+         error.prop.3.boot[u] <- length(which(ground.label != prac.label[[6]])) / (ns + ms)
       }
       
       res.list[[k]] <- cbind(c(error.prop.1, NA, mean(error.prop.1), sciplot::se(error.prop.1)),
                              c(error.prop.2, NA, mean(error.prop.2), sciplot::se(error.prop.2)),
                              c(error.prop.3, NA, mean(error.prop.3), sciplot::se(error.prop.3)),
+                             c(error.prop.1.boot, NA, mean(error.prop.1.boot), 
+                               sciplot::se(error.prop.1.boot)),
+                             c(error.prop.2.boot, NA, mean(error.prop.2.boot), 
+                               sciplot::se(error.prop.2.boot)),
+                             c(error.prop.3.boot, NA, mean(error.prop.3.boot), 
+                               sciplot::se(error.prop.3.boot)),
                              file.wrong.pop[[k]]) %>% as.data.frame()
       
       colnames(res.list[[k]]) <- c('del.1','del.2','del.3',
+                                   'del.1.boot','del.2.boot','del.3.boot',
                                    'BYS',
                                    'GLMNET',
                                    'RF1','RF2','RF3','RF4',
@@ -387,9 +465,10 @@ for(h in 1:length(files.wrong)){
                     "d=1000" = res.list[[8]])
    
    writexl::write_xlsx(res.list,
-                       path = paste0(path.new.results,files.wrong[h]))
+                       path = paste0(path.newest.results,files.wrong[h]))
    
    print(files.wrong[h])
+   print(Sys.time())
    cat("\n\n")
    
 }

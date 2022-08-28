@@ -7,9 +7,11 @@ library(readxl)
 library(writexl)
 library(EnvStats)
 
-no.cores <- round(detectCores() * 0.75)
-cl <- makeCluster(spec = no.cores, type = 'PSOCK')
-registerDoParallel(cl)
+##########################################################
+no.cores <- round(detectCores()*0.75)                 ####
+cl <- makeCluster(spec = no.cores, type = 'PSOCK')    ####
+registerDoParallel(cl)                                ####
+##########################################################
 
 # path.wrong.results <- "C:/Users/JYOTISHKA/Desktop/all-classifiers-TwoClass-simulated-old/"
 # path.new.results <- "C:\\Users\\JYOTISHKA\\Desktop\\all-classifiers-TwoClass-simulated-new\\"
@@ -19,60 +21,59 @@ path.new.results <- "E:\\JRC-2022\\Classification-Summer-2022-JRC\\Results\\Simu
 
 files.wrong <- list.files(path.wrong.results)
 
-rho <- function(a,b,c){
-   if (prod(a == c)== 1 || prod(b == c) == 1){
+#################
+rho <- function(a,b,q){
+   if (prod(a == q)== 1 || prod(b == q) == 1){
       return(0)
    }else{
-      temp <- sign((a-c) * (b-c)) * (-1)
+      temp <- sign((a-q) * (b-q)) * (-1)
       return(temp %>% replace(temp == -1, 0) %>% mean())
    }
 }
-
-rho.bar.hat <- function(U,V,X,Y){
-   if(U == V){
-      return(0)
-   }else{
-      n <- nrow(X)
-      m <- nrow(Y)
-      d <- ncol(X)
-      
-      S <- rep(0,d)
-      
-      for(k in 1:d){
-         S[k] <- c(sapply(1:n, function(val){rho(U[k],V[k],X[val,k])}),
-                   sapply(1:m, function(val){rho(U[k],V[k],Y[val,k])}))
-      }
-      
-      return(sum(S) / (d * (n+m)))
-   }
-}
-
+#################
 
 classify.parallel <- function(Z, X, Y, T.FF, T.GG, T.FG, W, S_FG){
    # print("Classification starting")
-   
    R <- nrow(Z)
+   Q <- rbind(X,Y)
    n <- nrow(X)
    m <- nrow(Y)
    
-   # clusterExport(cl, c('R','n','m'), envir = environment())
+   clusterExport(cl, c('R','n','m'), envir = environment())
    
-   T_FZ <- T_GZ <- rep(0,R)
    
-   for(r in 1:R){
-      S_1 <- S_2 <- 0
+   T_FZ.rho.fun <- function(vec){
+      i <- vec[1]
+      j <- vec[2]
       
-      for(i in 1:n){
-         S_1 <- S_1 + rho.bar.hat(X[i,],Z[r,],X,Y)
-      }
-      
-      for(j in 1:m){
-         S_2 <- S_2 + rho.bar.hat(Y[j,],Z[r,],X,Y)
-      }
-      
-      T_FZ[r] <- S_1 / n
-      T_GZ[r] <- S_2 / m
+      return(sum(sapply(1:(n+m),function(val){
+         rho(Z[i,],X[j,],Q[val,])
+      })))
    }
+   
+   index.mat <- cbind(rep(1:R, each = n),rep(1:n, times = R))
+   
+   T_FZ <- index.mat %>%
+      parApply(cl, ., 1, T_FZ.rho.fun) %>%
+      matrix(nrow = R, ncol = n, byrow = TRUE) %>% 
+      rowMeans() / (n+m-1)
+   
+   
+   T_GZ.rho.fun <- function(vec){
+      i <- vec[1]
+      j <- vec[2]
+      
+      return(sum(sapply(1:(n+m),function(val){
+         rho(Z[i,],Y[j,],Q[val,])
+      })))
+   }
+   
+   index.mat <- cbind(rep(1:R, each = m),rep(1:m, times = R))
+   
+   T_GZ <- index.mat %>%
+      parApply(cl, ., 1, T_GZ.rho.fun) %>%
+      matrix(nrow = R, ncol = m, byrow = TRUE) %>% 
+      rowMeans() / (n+m-1)
    
    
    L_FZ <- T_FZ - rep(T.FF, R)/2
@@ -81,6 +82,8 @@ classify.parallel <- function(Z, X, Y, T.FF, T.GG, T.FG, W, S_FG){
    S_Z <- L_FZ + L_GZ - T.FG
    
    W0_FG <- W[[1]]
+   # W1_FG <- W[[2]]
+   # W2_FG <- W[[3]]
    
    prac.label.1 <- prac.label.2 <- prac.label.3 <- rep(0, R)
    
@@ -150,6 +153,8 @@ for(h in 1:length(files.wrong)){
          ns <- 100
          ms <- 100
          
+         M <- 1000
+         
          if(u %% 5 == 0) {print(u)}
          
          if(h == 1){
@@ -190,7 +195,7 @@ for(h in 1:length(files.wrong)){
          if(h == 5){
             set.seed(u)
             
-            X <- matrix(rpareto((n + ns) * d, location =  1, shape = 1),
+            X <- matrix(rpareto((n + ns) * d, location = 1, shape = 1),
                         nrow = n + ns,
                         ncol = d,
                         byrow = TRUE)
@@ -205,44 +210,117 @@ for(h in 1:length(files.wrong)){
          
          X <- X[1:n,]
          Y <- Y[1:m,]
-         # Q <- rbind(X,Y)
+         Q <- rbind(X,Y)
+         B <- Q[sample(1:nrow(Q), size = M, replace = TRUE), ]
          
-         clusterExport(cl, c('X','Y','n','m'))
          
-         T.FG <- T.FF <- T.GG <- 0
+         clusterEvalQ(cl, {library(magrittr)})
+         clusterExport(cl, c('X','Y','Q','B','n','m','rho'))
          
-         #####
-         # index.mat <- cbind(rep(1:n, each = m),rep(1:m, times = n))
          
-         for(i in 1:n){
-            for(j in 1:m){
-               T.FG <- T.FG + rho.bar.hat(X[i,],Y[j,],X,Y)
-            }
+         ########################################### T.FG
+         
+         ##### T.FG.rho.fun
+         T.FG.rho.fun <- function(vec){
+            i <- vec[1]
+            j <- vec[2]
+            
+            return(sum(sapply(1:(n+m),function(val){
+               rho(X[i,],Y[j,],Q[val,])
+            })))
          }
          
-         T.FG <- T.FG / (n*m)
+         index.mat <- cbind(rep(1:n, each = m),rep(1:m, times = n))
          
-         #####
-         # index.mat <- cbind(rep(1:n, each = n),rep(1:n, times = n))
+         T.FG <- index.mat %>% 
+            parApply(cl, ., 1, T.FG.rho.fun) %>% sum() / ((n+m)*n*m)
          
-         for(i in 1:n){
-            for(j in 1:n){
-               T.FF <- T.FF + rho.bar.hat(X[i,],X[j,],X,Y)
-            }
+         ##### T.FG.rho.boot
+         T.FG.rho.boot <- function(vec){
+            i <- vec[1]
+            j <- vec[2]
+            
+            return(sum(sapply(1:M, function(val){
+               rho(X[i,],Y[j,],B[val,])
+            })))
          }
          
-         T.FF <- T.FF / (n*(n-1))
+         index.mat <- cbind(rep(1:n, each = m),rep(1:m, times = n))
          
-         #####
-         # index.mat <- cbind(rep(1:m, each = m),rep(1:m, times = m))
+         T.FG.boot <- index.mat %>% 
+            parApply(cl, ., 1, T.FG.rho.boot) %>% sum() / (M*n*m)
          
-         for(i in 1:m){
-            for(j in 1:m){
-               T.GG <- T.GG + rho.bar.hat(Y[i,],Y[j,],X,Y)
-            }
+         
+         
+         ########################################### T.FF
+         
+         ##### T.FF.rho.fun
+         T.FF.rho.fun <- function(vec){
+            i <- vec[1]
+            j <- vec[2]
+            
+            return(sum(sapply(1:(n+m),function(val){
+               rho(X[i,],X[j,],Q[val,])
+            })))
          }
          
-         T.GG <- T.GG / (m*(m-1))
+         index.mat <- cbind(rep(1:n, each = n),rep(1:n, times = n))
+         
+         T.FF <- index.mat %>% 
+            parApply(cl, ., 1, T.FF.rho.fun) %>% sum() / ((n+m)*n*(n-1))
+         
+         
+         ##### T.FF.rho.boot
+         T.FF.rho.boot <- function(vec){
+            i <- vec[1]
+            j <- vec[2]
+            
+            return(sum(sapply(1:M, function(val){
+               rho(X[i,],X[j,],B[val,])
+            })))
+         }
+         
+         index.mat <- cbind(rep(1:n, each = n),rep(1:n, times = n))
+         
+         T.FF.boot <- index.mat %>% 
+            parApply(cl, ., 1, T.FF.rho.boot) %>% sum() / (M*n*(n-1))
+         
+         
+         
+         ########################################### T.GG
+         
+         ##### T.GG.rho.fun
+         T.GG.rho.fun <- function(vec){
+            i <- vec[1]
+            j <- vec[2]
+            
+            return(sum(sapply(1:(n+m),function(val){
+               rho(Y[i,],Y[j,],Q[val,])
+            })))
+         }
+         
+         index.mat <- cbind(rep(1:m, each = m),rep(1:m, times = m))
+         
+         T.GG <- index.mat %>% 
+            parApply(cl, ., 1, T.GG.rho.fun) %>% sum() / ((n+m)*m*(m-1))
+         
+         
+         ##### T.GG.rho.boot
+         T.GG.rho.boot <- function(vec){
+            i <- vec[1]
+            j <- vec[2]
+            
+            return(sum(sapply(1:M,function(val){
+               rho(Y[i,],Y[j,],B[val,])
+            })))
+         }
+         
+         index.mat <- cbind(rep(1:m, each = m),rep(1:m, times = m))
+         
+         T.GG.boot <- index.mat %>% 
+            parApply(cl, ., 1, T.GG.rho.boot) %>% sum() / (M*m*(m-1))
+         
+         
          
          
          ########## W
@@ -253,6 +331,16 @@ for(h in 1:length(files.wrong)){
          W <- list(W0_FG, W1_FG, W2_FG)
          S_FG <- T.FF - T.GG
          
+         ########## W.boot
+         W0_FG.boot <- 2 * T.FG.boot - T.FF.boot - T.GG.boot
+         W1_FG.boot <- W0_FG.boot^2 / 2 + (T.FF.boot - T.GG.boot)^2 / 2
+         W2_FG.boot <- W0_FG.boot / 2 + abs(T.FF.boot - T.GG.boot) / 2
+         
+         W.boot <- list(W0_FG.boot, W1_FG.boot, W2_FG.boot)
+         S_FG.boot <- T.FF.boot - T.GG.boot
+         
+         
+         
          
          ########## Test Observations
          
@@ -260,7 +348,11 @@ for(h in 1:length(files.wrong)){
          
          clusterExport(cl, c('Z'))
          
-         prac.label <- classify.parallel(Z, X, Y, T.FF, T.GG, T.FG, W, S_FG)
+         prac.label <- classify.parallel(Z, X, Y, 
+                                         T.FF, T.GG, T.FG,
+                                         T.FF.boot, T.GG.boot, T.FG.boot,
+                                         W, W.boot,
+                                         S_FG, S_FG.boot)
          
          error.prop.1[u] <- length(which(ground.label != prac.label[[1]])) / (ns + ms)
          error.prop.2[u] <- length(which(ground.label != prac.label[[2]])) / (ns + ms)

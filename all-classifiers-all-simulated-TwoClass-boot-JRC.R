@@ -1,4 +1,6 @@
 
+## Our classifiers including bootstrapped rho, with appended results of popular classifiers
+## Date: 28.08.2022
 
 library(doParallel)
 library(rio)
@@ -32,7 +34,9 @@ rho <- function(a,b,q){                                     ####
 }                                                           ####
 ################################################################
 
-###################################################################### Classifiers
+
+################################################### Classifier Function for Test Observations
+
 classify.parallel <- function(Z, X, Y, B, T.FF, T.GG, T.FG, W, S_FG){
    # print("Classification starting")
    R <- nrow(Z)
@@ -186,6 +190,7 @@ M <- 1000
 
 d.seq <- c(5,10,25,50,100,250,500,1000)
 
+########## 
 
 for(h in 1:length(files.wrong)){
    
@@ -409,10 +414,10 @@ for(h in 1:length(files.wrong)){
          
          
          
-         ########## Test Observations
+         
+         ##### Classifcation of Test Observations
          
          ground.label <- c(rep(1,ns), rep(2,ms))
-         
          clusterExport(cl, c('Z'))
          
          prac.label <- classify.parallel(Z, X, Y, 
@@ -430,16 +435,19 @@ for(h in 1:length(files.wrong)){
          error.prop.3.boot[u] <- length(which(ground.label != prac.label[[6]])) / (ns + ms)
       }
       
-      res.list[[k]] <- cbind(c(error.prop.1, NA, mean(error.prop.1), sciplot::se(error.prop.1)),
-                             c(error.prop.2, NA, mean(error.prop.2), sciplot::se(error.prop.2)),
-                             c(error.prop.3, NA, mean(error.prop.3), sciplot::se(error.prop.3)),
+      res.list[[k]] <- cbind(c(error.prop.1, NA, mean(error.prop.1), 
+                               sciplot::se(error.prop.1)),
+                             c(error.prop.2, NA, mean(error.prop.2), 
+                               sciplot::se(error.prop.2)),
+                             c(error.prop.3, NA, mean(error.prop.3), 
+                               sciplot::se(error.prop.3)),
                              c(error.prop.1.boot, NA, mean(error.prop.1.boot), 
                                sciplot::se(error.prop.1.boot)),
                              c(error.prop.2.boot, NA, mean(error.prop.2.boot), 
                                sciplot::se(error.prop.2.boot)),
                              c(error.prop.3.boot, NA, mean(error.prop.3.boot), 
                                sciplot::se(error.prop.3.boot)),
-                             file.wrong.pop[[k]]) %>% as.data.frame()
+                           file.wrong.pop[[k]]) %>% as.data.frame()
       
       colnames(res.list[[k]]) <- c('del.1','del.2','del.3',
                                    'del.1.boot','del.2.boot','del.3.boot',
@@ -470,5 +478,23 @@ for(h in 1:length(files.wrong)){
    print(files.wrong[h])
    print(Sys.time())
    cat("\n\n")
-   
+}
+
+
+
+
+
+
+
+
+
+
+########## Extracting unordered pairs from ordered pairs
+
+if (FALSE) {
+   index.mat %>%
+      as.data.frame() %>%
+      mutate(dx = pmin(V1, V2), dy = pmax(V1, V2)) %>%
+      distinct(dx, dy) %>%
+      filter(dx != dy)
 }

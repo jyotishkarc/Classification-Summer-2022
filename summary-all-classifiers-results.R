@@ -6,7 +6,8 @@ library(stringr)
 
 path <- "C:/Users/JYOTISHKA/Desktop/"
 
-path.simulated <- paste0(path, "all-classifiers-TwoClass-simulated-new/")
+path.simulated <- paste0(path, "NEWEST/")
+# path.simulated <- paste0(path, "all-classifiers-TwoClass-simulated-new/")
 path.UCR <- paste0(path, "UCR-TwoClass-Results/")
 path.CompCancer <- paste0(path, "CompCancer-TwoClass-New-Results/")
 
@@ -16,6 +17,8 @@ results.CompCancer <- list.files(path.CompCancer)
 
 
 columns <- c('del.1','del.2','del.3',
+             'del.1.boot','del.2.boot','del.3.boot',
+             'BYS',
              'GLMNET',
              'RF1','RF2','RF3','RF4',
              'NNRAND',
@@ -26,7 +29,7 @@ columns <- c('del.1','del.2','del.3',
 
 ################################################################################# UCR
 
-if(TRUE) {
+if(FALSE) {
    path.UCR.stats <- "G:/Datasets/Classification Datasets/"
    # path.UCR.stats <- "E:/JRC-2022/Classification-Summer-2022-JRC/Datasets/UCR/"
    
@@ -102,6 +105,32 @@ if(FALSE){
 # writexl::write_xlsx(res.summary.CompCancer %>% as.data.frame(), "C:\\Users\\JYOTISHKA\\Desktop\\CompCancer-TwoClass-Results.xlsx")
 
 
+########################################################################## Simulated
+
+if(TRUE){
+   res.summary.simulated <- matrix(0, nrow = 3*length(results.simulated), 
+                                    ncol = length(columns) + 1)
+   
+   for(val in 1:length(results.simulated)){
+      temp.file <- read_excel(paste0(path.simulated, results.simulated[val]))
+      
+      if(val == 1){
+         res.summary.simulated[(3*(val - 1) + 1):(3*(val - 1) + 6), ] <- 
+            cbind(c(NA,results.simulated[val],NA), 
+                  rbind(rep(NA,23), temp.file[52:53, ])) %>% as.matrix()
+      }
+      else{
+         res.summary.simulated[(3*(val - 1) + 1):(3*(val - 1) + 6), ] <- 
+            cbind(c(NA,results.simulated[val],NA), 
+                  rbind(rep(NA,23), temp.file[102:103, ])) %>% as.matrix()
+      } 
+      
+   }
+   
+   colnames(res.summary.CompCancer) <- c("Name",columns)
+}
+
+#####################################################################################
 
 
 

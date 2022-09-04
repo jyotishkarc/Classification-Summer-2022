@@ -9,7 +9,7 @@ library(readxl)
 library(writexl)
 library(EnvStats)
 
-################################################################
+################################################################ Multi-threading
 no.cores <- round(detectCores()*0.75)                       ####
 cl <- makeCluster(spec = no.cores, type = 'PSOCK')          ####
 registerDoParallel(cl)                                      ####
@@ -23,7 +23,7 @@ path.newest.results <- "E:\\JRC-2022\\Classification-Summer-2022-JRC\\Results\\S
 
 files.wrong <- list.files(path.wrong.results)
 
-################################################################
+################################################################ rho function
 rho <- function(a,b,q){                                     ####
    if (prod(a == q)== 1 || prod(b == q) == 1){              ####
       return(0)                                             ####
@@ -415,16 +415,18 @@ for(h in 1:length(files.wrong)){
          
          
          
-         ##### Classifcation of Test Observations
+         ########## Classifcation of Test Observations
          
          ground.label <- c(rep(1,ns), rep(2,ms))
          clusterExport(cl, c('Z'))
          
+         ##################################################################### Classification
          prac.label <- classify.parallel(Z, X, Y, 
                                          T.FF, T.GG, T.FG,
                                          T.FF.boot, T.GG.boot, T.FG.boot,
                                          W, W.boot,
                                          S_FG, S_FG.boot)
+         #####################################################################
          
          error.prop.1[u] <- length(which(ground.label != prac.label[[1]])) / (ns + ms)
          error.prop.2[u] <- length(which(ground.label != prac.label[[2]])) / (ns + ms)

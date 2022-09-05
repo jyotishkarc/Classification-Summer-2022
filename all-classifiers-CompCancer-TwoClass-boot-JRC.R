@@ -204,8 +204,7 @@ for(h in 1:length(files)){
    
    print(h)
    print(files[h])
-   cat("Started:")
-   print(Sys.time())
+   
    start.time <- proc.time()
    
    dataset <- paste0(path, files[h]) %>% 
@@ -238,6 +237,9 @@ for(h in 1:length(files)){
       error.prop.1.boot <- error.prop.2.boot <- error.prop.3.boot <- c()
    
    res.list <- list()
+   
+   cat("Started - Our Classifiers:")
+   print(Sys.time())
    
    ############################################## Our Classifiers
    
@@ -405,7 +407,7 @@ for(h in 1:length(files)){
       error.prop.3.boot[u] <- length(which(ground.label != prac.label[[6]])) / nrow(Z)
    }
    
-   cat("Started:Popular Classifiers:")
+   cat("Started - Popular Classifiers:")
    print(Sys.time())
    
    ############################################## Popular Classifiers
@@ -629,16 +631,14 @@ for(h in 1:length(files)){
    
    end.time <- proc.time()[3]
    time.CompCancer[h] <- end.time - start.time
-   print(time.CompCancer)
+   print(time.CompCancer[h])
    cat("Ended:")
    print(Sys.time())
-   print(files.wrong[h])
+   print(files[h])
    cat("\n\n")
 }
 
 
 stopCluster(cl)
 gc()
-
-
 

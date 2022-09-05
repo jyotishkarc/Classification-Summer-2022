@@ -1,0 +1,644 @@
+
+library(doParallel)
+library(magrittr)
+library(readxl)
+library(writexl)
+
+library(glmnet)            #### GLMNET
+library(RandPro)           #### Random Projection
+library(e1071)             #### SVM (Linear & RBF Kernel)
+library(randomForest)      #### Random Forest
+library(nnet)              #### Neural Networks
+library(class)             #### One Nearest Neighbour
+
+
+# start.time <- proc.time()
+
+no.cores <- round(detectCores()*0.75)
+cl <- makeCluster(spec = no.cores, type = 'PSOCK')
+registerDoParallel(cl)
+
+# rho <- function(a,b,c){
+#    if (prod(a == c)== 1 || prod(b == c) == 1){
+#       return(0)
+#    }else{
+#       return(acos(sum((a-c)*(b-c)) / sqrt(sum((a-c)^2) * sum((b-c)^2))) / pi)
+#    }
+# }
+
+rho <- function(a,b,c){
+   if (prod(a == c)== 1 || prod(b == c) == 1){
+      return(0)
+   }else{
+      temp <- sign((a-c) * (b-c)) * (-1)
+      return(temp %>% replace(temp == -1, 0) %>% mean())
+   }
+}
+
+
+
+
+################################################### Classifier Function for Test Observations
+
+classify.parallel <- function(Z, X, Y, B,
+                              T.FF, T.GG, T.FG,
+                              T.FF.boot, T.GG.boot, T.FG.boot,
+                              W, W.boot,
+                              S_FG, S_FG.boot){
+   # print("Classification starting")
+   R <- nrow(Z)
+   Q <- rbind(X,Y)
+   n <- nrow(X)
+   m <- nrow(Y)
+   M <- nrow(B)
+   
+   clusterExport(cl, c('R','n','m'), envir = environment())
+   
+   
+   ########################################### T_FZ
+   
+   ##### T_FZ.rho.fun
+   T_FZ.rho.fun <- function(vec){
+      i <- vec[1]
+      j <- vec[2]
+      
+      return(sum(sapply(1:(n+m),function(val){
+         rho(Z[i,],X[j,],Q[val,])
+      })))
+   }
+   
+   index.mat <- cbind(rep(1:R, each = n),rep(1:n, times = R))
+   
+   T_FZ <- index.mat %>%
+      parApply(cl, ., 1, T_FZ.rho.fun) %>%
+      matrix(nrow = R, ncol = n, byrow = TRUE) %>% 
+      rowMeans() / (n+m)
+   
+   
+   ##### T_FZ.rho.boot
+   T_FZ.rho.boot <- function(vec){
+      i <- vec[1]
+      j <- vec[2]
+      
+      return(sum(sapply(1:M,function(val){
+         rho(Z[i,],X[j,],B[val,])
+      })))
+   }
+   
+   index.mat <- cbind(rep(1:R, each = n),rep(1:n, times = R))
+   
+   T_FZ.boot <- index.mat %>%
+      parApply(cl, ., 1, T_FZ.rho.boot) %>%
+      matrix(nrow = R, ncol = n, byrow = TRUE) %>% 
+      rowMeans() / M
+   
+   
+   ########################################### T_FZ
+   
+   ##### T_GZ.rho.fun
+   T_GZ.rho.fun <- function(vec){
+      i <- vec[1]
+      j <- vec[2]
+      
+      return(sum(sapply(1:(n+m),function(val){
+         rho(Z[i,],Y[j,],Q[val,])
+      })))
+   }
+   
+   index.mat <- cbind(rep(1:R, each = m),rep(1:m, times = R))
+   
+   T_GZ <- index.mat %>%
+      parApply(cl, ., 1, T_GZ.rho.fun) %>%
+      matrix(nrow = R, ncol = m, byrow = TRUE) %>% 
+      rowMeans() / (n+m)
+   
+   
+   ##### T_GZ.rho.boot
+   T_GZ.rho.boot <- function(vec){
+      i <- vec[1]
+      j <- vec[2]
+      
+      return(sum(sapply(1:M,function(val){
+         rho(Z[i,],Y[j,],B[val,])
+      })))
+   }
+   
+   index.mat <- cbind(rep(1:R, each = m),rep(1:m, times = R))
+   
+   T_GZ.boot <- index.mat %>%
+      parApply(cl, ., 1, T_GZ.rho.boot) %>%
+      matrix(nrow = R, ncol = m, byrow = TRUE) %>% 
+      rowMeans() / M
+   
+   
+   
+   L_FZ <- T_FZ - rep(T.FF, R)/2
+   L_GZ <- T_GZ - rep(T.GG, R)/2
+   S_Z <- L_FZ + L_GZ - T.FG
+   
+   L_FZ.boot <- T_FZ.boot - rep(T.FF.boot, R)/2
+   L_GZ.boot <- T_GZ.boot - rep(T.GG.boot, R)/2
+   S_Z.boot <- L_FZ.boot + L_GZ.boot - T.FG.boot
+   
+   W0_FG <- W[[1]]
+   # W1_FG <- W[[2]]
+   # W2_FG <- W[[3]]
+   
+   W0_FG.boot <- W.boot[[1]]
+   # W1_FG.boot <- W.boot[[2]]
+   # W2_FG.boot <- W.boot[[3]]
+   
+   prac.label.1 <- prac.label.2 <- prac.label.3 <- 
+      prac.label.1.boot <- prac.label.2.boot <- prac.label.3.boot <- rep(0, R)
+   
+   #### CLASSIFIER 1
+   delta1_Z <- L_GZ - L_FZ
+   delta1_Z.boot <- L_GZ.boot - L_FZ.boot
+   
+   prac.label.1[which(delta1_Z > 0)] <- 1
+   prac.label.1.boot[which(delta1_Z.boot > 0)] <- 1
+   prac.label.1[which(delta1_Z <= 0)] <- 2
+   prac.label.1.boot[which(delta1_Z.boot <= 0)] <- 2
+   
+   #### CLASSIFIER 2
+   delta2_Z <- W0_FG * delta1_Z + S_FG * S_Z
+   delta2_Z.boot <- W0_FG.boot * delta1_Z.boot + S_FG.boot * S_Z.boot
+   
+   prac.label.2[which(delta2_Z > 0)] <- 1
+   prac.label.2.boot[which(delta2_Z.boot > 0)] <- 1
+   prac.label.2[which(delta2_Z <= 0)] <- 2
+   prac.label.2.boot[which(delta2_Z.boot <= 0)] <- 2
+   
+   #### CLASSIFIER 3
+   delta3_Z <- W0_FG * sign(delta1_Z) + S_FG * sign(S_Z)
+   delta3_Z.boot <- W0_FG.boot * sign(delta1_Z.boot) + S_FG.boot * sign(S_Z.boot)
+   
+   prac.label.3[which(delta3_Z > 0)] <- 1
+   prac.label.3.boot[which(delta3_Z.boot > 0)] <- 1
+   prac.label.3[which(delta3_Z <= 0)] <- 2
+   prac.label.3.boot[which(delta3_Z.boot <= 0)] <- 2
+   
+   prac.label <- list(prac.label.1, prac.label.2, prac.label.3,
+                      prac.label.1.boot, prac.label.2.boot, prac.label.3.boot)
+   
+   return(prac.label)
+}
+##################################################################################
+
+
+clusterEvalQ(cl, {library(magrittr)})
+#clusterExport(cl, ls())
+
+
+print("Hello")
+
+iterations <- 50
+
+# path <- "D:/My Documents/Datasets/CompCancer Database/TwoClass/"
+path <- "E:/JRC-2022/Classification-Summer-2022-JRC/Datasets/CompCancer Database/TwoClass/"
+
+files <- list.files(path)
+time.CompCancer <- rep(0, length(files))
+
+for(h in 1:length(files)){
+   
+   print(h)
+   print(files[h])
+   cat("Started:")
+   print(Sys.time())
+   start.time <- proc.time()
+   
+   dataset <- paste0(path, files[h]) %>% 
+      read_excel() %>% 
+      as.matrix() %>%
+      apply(c(1,2), function(val) as.numeric(val))
+   
+   N <- nrow(dataset)
+   d <- ncol(dataset) - 1
+   
+   ground.truth <- dataset[,1] %>% unlist() #%>% as.numeric()
+   
+   class.1 <- which(ground.truth == 1)
+   class.2 <- which(ground.truth == 2)
+   
+   n <- round(length(class.1) * 0.5)
+   m <- round(length(class.2) * 0.5)
+   
+   M <- 1000
+   
+   train.index <- test.index <- list()
+   
+   for(u in 1:iterations){
+      train.index[[u]] <- c(sample(class.1, n),sample(class.2, m))
+      test.index[[u]] <- setdiff(1:N, train.index[[u]])
+   }
+   
+   
+   error.prop.1 <- error.prop.2 <- error.prop.3 <- 
+      error.prop.1.boot <- error.prop.2.boot <- error.prop.3.boot <- c()
+   
+   res.list <- list()
+   
+   ############################################## Our Classifiers
+   
+   for(u in 1:iterations){
+      
+      if(u %% 1 == 0) print(u)
+      start.time <- proc.time()[3]
+      
+      X <- dataset[which(dataset[train.index[[u]],1] == 1), -1]
+      Y <- dataset[which(dataset[train.index[[u]],1] == 2), -1]
+      Q <- rbind(X,Y)
+      B <- Q[sample(1:nrow(Q), size = M, replace = TRUE), ]
+      
+      Z <- dataset[test.index[[u]], -1]     ## Test Observations
+      
+      # if (u %% 1 == 0) {print(u)}
+      
+      n <- nrow(X)
+      m <- nrow(Y)
+      
+      clusterExport(cl, c('X','Y','Q','B','M','n','m','rho'))
+      
+      
+      ########################################### T.FG
+      
+      ##### T.FG.rho.fun
+      T.FG.rho.fun <- function(vec){
+         i <- vec[1]
+         j <- vec[2]
+         
+         return(sum(sapply(1:(n+m),function(val){
+            rho(X[i,],Y[j,],Q[val,])
+         })))
+      }
+      
+      index.mat <- cbind(rep(1:n, each = m),rep(1:m, times = n))
+      
+      T.FG <- index.mat %>% 
+         parApply(cl, ., 1, T.FG.rho.fun) %>% sum() / ((n+m)*n*m)
+      
+      ##### T.FG.rho.boot
+      T.FG.rho.boot <- function(vec){
+         i <- vec[1]
+         j <- vec[2]
+         
+         return(sum(sapply(1:M, function(val){
+            rho(X[i,],Y[j,],B[val,])
+         })))
+      }
+      
+      index.mat <- cbind(rep(1:n, each = m),rep(1:m, times = n))
+      
+      T.FG.boot <- index.mat %>% 
+         parApply(cl, ., 1, T.FG.rho.boot) %>% sum() / (M*n*m)
+      
+      
+      
+      ########################################### T.FF
+      
+      ##### T.FF.rho.fun
+      T.FF.rho.fun <- function(vec){
+         i <- vec[1]
+         j <- vec[2]
+         
+         return(sum(sapply(1:(n+m),function(val){
+            rho(X[i,],X[j,],Q[val,])
+         })))
+      }
+      
+      index.mat <- cbind(rep(1:n, each = n),rep(1:n, times = n))
+      
+      T.FF <- index.mat %>% 
+         parApply(cl, ., 1, T.FF.rho.fun) %>% sum() / ((n+m)*n*(n-1))
+      
+      
+      ##### T.FF.rho.boot
+      T.FF.rho.boot <- function(vec){
+         i <- vec[1]
+         j <- vec[2]
+         
+         return(sum(sapply(1:M, function(val){
+            rho(X[i,],X[j,],B[val,])
+         })))
+      }
+      
+      index.mat <- cbind(rep(1:n, each = n),rep(1:n, times = n))
+      
+      T.FF.boot <- index.mat %>% 
+         parApply(cl, ., 1, T.FF.rho.boot) %>% sum() / (M*n*(n-1))
+      
+      
+      
+      ########################################### T.GG
+      
+      ##### T.GG.rho.fun
+      T.GG.rho.fun <- function(vec){
+         i <- vec[1]
+         j <- vec[2]
+         
+         return(sum(sapply(1:(n+m),function(val){
+            rho(Y[i,],Y[j,],Q[val,])
+         })))
+      }
+      
+      index.mat <- cbind(rep(1:m, each = m),rep(1:m, times = m))
+      
+      T.GG <- index.mat %>% 
+         parApply(cl, ., 1, T.GG.rho.fun) %>% sum() / ((n+m)*m*(m-1))
+      
+      
+      ##### T.GG.rho.boot
+      T.GG.rho.boot <- function(vec){
+         i <- vec[1]
+         j <- vec[2]
+         
+         return(sum(sapply(1:M,function(val){
+            rho(Y[i,],Y[j,],B[val,])
+         })))
+      }
+      
+      index.mat <- cbind(rep(1:m, each = m),rep(1:m, times = m))
+      
+      T.GG.boot <- index.mat %>% 
+         parApply(cl, ., 1, T.GG.rho.boot) %>% sum() / (M*m*(m-1))
+      
+      
+      ########## W
+      W0_FG <- 2 * T.FG - T.FF - T.GG
+      W1_FG <- W0_FG^2 / 2 + (T.FF - T.GG)^2 / 2
+      W2_FG <- W0_FG / 2 + abs(T.FF - T.GG) / 2
+      
+      W <- list(W0_FG, W1_FG, W2_FG)
+      S_FG <- T.FF - T.GG
+      
+      ########## W.boot
+      W0_FG.boot <- 2 * T.FG.boot - T.FF.boot - T.GG.boot
+      W1_FG.boot <- W0_FG.boot^2 / 2 + (T.FF.boot - T.GG.boot)^2 / 2
+      W2_FG.boot <- W0_FG.boot / 2 + abs(T.FF.boot - T.GG.boot) / 2
+      
+      W.boot <- list(W0_FG.boot, W1_FG.boot, W2_FG.boot)
+      S_FG.boot <- T.FF.boot - T.GG.boot
+      
+      
+      
+      ########## Test Observations
+      
+      ground.label <- ground.truth[test.index[[u]]]
+      
+      clusterExport(cl, c('Z'))
+      
+      ##################################################################### Classification
+      prac.label <- classify.parallel(Z, X, Y, B,
+                                      T.FF, T.GG, T.FG,
+                                      T.FF.boot, T.GG.boot, T.FG.boot,
+                                      W, W.boot,
+                                      S_FG, S_FG.boot)
+      #####################################################################
+      
+      error.prop.1[u] <- length(which(ground.label != prac.label[[1]])) / nrow(Z)
+      error.prop.2[u] <- length(which(ground.label != prac.label[[2]])) / nrow(Z)
+      error.prop.3[u] <- length(which(ground.label != prac.label[[3]])) / nrow(Z)
+      
+      error.prop.1.boot[u] <- length(which(ground.label != prac.label[[4]])) / nrow(Z)
+      error.prop.2.boot[u] <- length(which(ground.label != prac.label[[5]])) / nrow(Z)
+      error.prop.3.boot[u] <- length(which(ground.label != prac.label[[6]])) / nrow(Z)
+   }
+   
+   cat("Started:Popular Classifiers:")
+   print(Sys.time())
+   
+   ############################################## Popular Classifiers
+   
+   result <- foreach(u = 1:iterations,
+                     .combine = rbind,
+                     .packages = c('glmnet','RandPro','e1071','randomForest',
+                                   'class','nnet')) %dopar% 
+      {
+         X <- dataset[which(dataset[train.index[[u]],1] == 1), -1]
+         Y <- dataset[which(dataset[train.index[[u]],1] == 2), -1]
+         
+         n <- nrow(X)
+         m <- nrow(Y)
+         
+         train.sample <- rbind(X,Y)
+         train.label <- c(rep(1,n), rep(2,m))
+         
+         test.sample <- Z <- dataset[test.index[[u]], -1]     ## Test Observations
+         test.label <- dataset[test.index[[u]], 1]
+         
+         # if (u %% 1 == 0) {print(u)}
+         
+         
+         
+         
+         ################################ GLMNET
+         
+         mdl <- cv.glmnet(
+            x = train.sample,
+            y = as.factor(train.label),
+            family = 'binomial',
+            # family = ifelse(J==2, 'binomial', 'multinomial'),
+            type.measure = 'class'
+         )
+         
+         lam.opt <- mdl$lambda[which.min(mdl$cvm)]
+         
+         pred.lbl <- predict(
+            object = mdl,
+            newx = as.matrix(test.sample),
+            type = 'class',
+            s = lam.opt
+         )
+         
+         e_glm <- mean(pred.lbl != test.label)
+         
+         
+         ################################ Random Projection NN
+         
+         mdl2 <- RandPro::classify(
+            train_data = as.matrix(train.sample),
+            test_data = as.matrix(test.sample),
+            train_label = as.factor(train.label),
+            test_label = as.factor(test.label),
+            eps = 0.1
+         )
+         
+         e_rnd = 1 - as.numeric(mdl2$overall[1])
+         
+         
+         ################################ SVM Linear
+         
+         fit1 <- svm(x = train.sample, y = as.factor(train.label),
+                     kernel = "linear", gamma = 1/d)
+         p_1 <- as.numeric(predict(fit1, test.sample))
+         
+         e_SVM_lin <- mean(p_1 != test.label)
+         
+         
+         ################################ SVM RBF
+         
+         fit4 <- svm(x = train.sample, y = as.factor(train.label),
+                     kernel = "radial")
+         
+         p_1 <- as.numeric(predict(fit4, test.sample))
+         
+         e_SVM_rbf <- mean(p_1 != test.label)
+         
+         
+         ################################ Random Forest
+         
+         fit1 <- randomForest(train.sample, as.factor(train.label),
+                              ntree = 5000, mtry = d^0.1)
+         fit2 <- randomForest(train.sample, as.factor(train.label),
+                              ntree = 5000, mtry = d^0.25)
+         fit3 <- randomForest(train.sample, as.factor(train.label),
+                              ntree = 5000, mtry = d^0.5)
+         fit4 <- randomForest(train.sample, as.factor(train.label),
+                              ntree = 5000, mtry = d^0.75)
+         
+         p_1 <- as.numeric(predict(object = fit1, newdata = test.sample,
+                                   type = 'class'))
+         p_2 <- as.numeric(predict(object = fit2, newdata = test.sample,
+                                   type = 'class'))
+         p_3 <- as.numeric(predict(object = fit3, newdata = test.sample,
+                                   type = 'class'))
+         p_4 <- as.numeric(predict(object = fit4, newdata = test.sample,
+                                   type = 'class'))
+         
+         e_RF_1 <- mean(p_1 != test.label)
+         e_RF_2 <- mean(p_2 != test.label)
+         e_RF_3 <- mean(p_3 != test.label)
+         e_RF_4 <- mean(p_4 != test.label)
+         
+         
+         ################################ Neural Networks
+         
+         ##### Logistic Activation
+         
+         Q <- data.frame(rbind(train.sample, test.sample))
+         targets <- class.ind(c(train.label, test.label))
+         
+         mdl.nnet.logistic.1 <- nnet(Q[1:(n+m),], targets[1:(n+m),], size = 1,
+                                     decay = 5e-4, maxit = 100, MaxNWts = 27000,
+                                     linout = FALSE)
+         
+         mdl.nnet.logistic.3 <- nnet(Q[1:(n+m),], targets[1:(n+m),], size = 3,
+                                     decay = 5e-4, maxit = 100, MaxNWts = 27000,
+                                     linout = FALSE)
+         
+         mdl.nnet.logistic.5 <- nnet(Q[1:(n+m),], targets[1:(n+m),], size = 5,
+                                     decay = 5e-4, maxit = 100, MaxNWts = 27000,
+                                     linout = FALSE)
+         
+         mdl.nnet.logistic.10 <- nnet(Q[1:(n+m),], targets[1:(n+m),], size = 10,
+                                      decay = 5e-4, maxit = 100, MaxNWts = 27000,
+                                      linout = FALSE)
+         
+         p_log_1 <- predict(mdl.nnet.logistic.1, Q[-c(1:(n+m)),])
+         p_log_3 <- predict(mdl.nnet.logistic.3, Q[-c(1:(n+m)),])
+         p_log_5 <- predict(mdl.nnet.logistic.5, Q[-c(1:(n+m)),])
+         p_log_10 <- predict(mdl.nnet.logistic.10, Q[-c(1:(n+m)),])
+         
+         e_nnet_log_1 <- mean(apply(p_log_1, 1, which.max) != test.label)
+         e_nnet_log_3 <- mean(apply(p_log_3, 1, which.max) != test.label)
+         e_nnet_log_5 <- mean(apply(p_log_5, 1, which.max) != test.label)
+         e_nnet_log_10 <- mean(apply(p_log_10, 1, which.max) != test.label)
+         
+         
+         # ##### ReLU Activation
+         
+         mdl.nnet.ReLU.1 <- nnet(Q[1:(n+m),], targets[1:(n+m),], size = 1,
+                                 decay = 5e-4, maxit = 100, MaxNWts = 27000,
+                                 linout = TRUE)
+         
+         mdl.nnet.ReLU.3 <- nnet(Q[1:(n+m),], targets[1:(n+m),], size = 3,
+                                 decay = 5e-4, maxit = 100, MaxNWts = 27000,
+                                 linout = TRUE)
+         
+         mdl.nnet.ReLU.5 <- nnet(Q[1:(n+m),], targets[1:(n+m),], size = 5,
+                                 decay = 5e-4, maxit = 100, MaxNWts = 27000,
+                                 linout = TRUE)
+         
+         mdl.nnet.ReLU.10 <- nnet(Q[1:(n+m),], targets[1:(n+m),], size = 10,
+                                  decay = 5e-4, maxit = 100, MaxNWts = 27000,
+                                  linout = TRUE)
+         
+         p_ReLU_1 <- predict(mdl.nnet.ReLU.1, Q[-c(1:(n+m)),])
+         p_ReLU_3 <- predict(mdl.nnet.ReLU.3, Q[-c(1:(n+m)),])
+         p_ReLU_5 <- predict(mdl.nnet.ReLU.5, Q[-c(1:(n+m)),])
+         p_ReLU_10 <- predict(mdl.nnet.ReLU.10, Q[-c(1:(n+m)),])
+         
+         e_nnet_ReLU_1 <- mean(apply(p_ReLU_1, 1, which.max) != test.label)
+         e_nnet_ReLU_3 <- mean(apply(p_ReLU_3, 1, which.max) != test.label)
+         e_nnet_ReLU_5 <- mean(apply(p_ReLU_5, 1, which.max) != test.label)
+         e_nnet_ReLU_10 <- mean(apply(p_ReLU_10, 1, which.max) != test.label)
+         
+         
+         ################################ One Nearest Neighbour
+         
+         mdl.onn <- class::knn1(train = train.sample,
+                                test = test.sample,
+                                cl = as.factor(train.label))
+         
+         e_onn <- mean(mdl.onn != test.label)
+         
+         
+         ################################
+         
+         return(c(e_glm,
+                  e_RF_1, e_RF_2, e_RF_3, e_RF_4,
+                  e_rnd,
+                  e_SVM_lin,
+                  e_SVM_rbf,
+                  e_nnet_log_1, e_nnet_log_3, e_nnet_log_5, e_nnet_log_10,
+                  e_nnet_ReLU_1, e_nnet_ReLU_3, e_nnet_ReLU_5, e_nnet_ReLU_10,
+                  e_onn
+         ))
+      }
+   
+   result.all <- cbind(error.prop.1, error.prop.2, error.prop.3,
+                       error.prop.1.boot, error.prop.2.boot, error.prop.3.boot,
+                       as.data.frame(result)) %>% as.data.frame()
+   
+   colnames(result.all) <- c('del.1','del.2','del.3',
+                             'del.1.boot','del.2.boot','del.3.boot',
+                             'GLMNET',
+                             'RF1','RF2','RF3','RF4',
+                             'NNRAND',
+                             'SVMLIN','SVMRBF',
+                             'NN-lg-1','NN-lg-3','NN-lg-5','NN-lg-10',
+                             'NN-R-1','NN-R-3','NN-R-5','NN-R-10',
+                             'ONN')
+   
+   rownames(result.all) <- 1:iterations
+   
+   res.list <- rbind(result.all, rep(NA, ncol(result.all)), 
+                     apply(result.all, 2, mean), 
+                     apply(result.all, 2, sciplot::se))
+   
+   # result.folder.path <- "C:\\Users\\JYOTISHKA\\Desktop\\CompCancer-TwoClass-Results\\"
+   
+   result.folder.path <- "E:\\JRC-2022\\Classification-Summer-2022-JRC\\Results\\Real\\CompCancer\\TwoClass\\NEWEST\\"
+   
+   print(h)
+   print(files[h])
+   
+   write_xlsx(x = res.list,
+              path = paste0(result.folder.path, files[h]))
+   
+   end.time <- proc.time()[3]
+   time.CompCancer[h] <- end.time - start.time
+   print(time.CompCancer)
+   cat("Ended:")
+   print(Sys.time())
+   print(files.wrong[h])
+   cat("\n\n")
+}
+
+
+stopCluster(cl)
+gc()
+
+
+

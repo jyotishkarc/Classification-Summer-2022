@@ -684,7 +684,7 @@ for(h in 1:length(files.TwoClass)){
    result.folder.path <- "E:\\JRC-2022\\Classification-Summer-2022-JRC\\Results\\Real\\UCR\\TwoClass\\NEWEST\\"
    
    write_xlsx(x = res.list,
-              path = paste0(result.folder.path, files.TwoClass[h]))
+              path = paste0(result.folder.path, files.TwoClass[h],".xlsx"))
    
    end.time <- proc.time()[3]
    time.UCR[h] <- end.time - start.time

@@ -7,9 +7,8 @@ library(stringr)
 path <- "C:/Users/JYOTISHKA/Desktop/"
 
 path.simulated <- paste0(path, "NEWEST/")
-# path.simulated <- paste0(path, "all-classifiers-TwoClass-simulated-new/")
-path.UCR <- paste0(path, "UCR-TwoClass-Results/")
-path.CompCancer <- paste0(path, "CompCancer-TwoClass-New-Results/")
+path.UCR <- paste0(path, "NEWEST - UCR/")
+path.CompCancer <- paste0(path, "NEWEST - CompCancer/")
 
 results.simulated <- list.files(path.simulated)
 results.UCR <- list.files(path.UCR)
@@ -18,7 +17,6 @@ results.CompCancer <- list.files(path.CompCancer)
 
 columns <- c('del.1','del.2','del.3',
              'del.1.boot','del.2.boot','del.3.boot',
-             'BYS',
              'GLMNET',
              'RF1','RF2','RF3','RF4',
              'NNRAND',
@@ -29,7 +27,18 @@ columns <- c('del.1','del.2','del.3',
 
 ################################################################################# UCR
 
-if(FALSE) {
+if(TRUE) {
+   
+   columns <- c('del.1','del.2','del.3',
+                'del.1.boot','del.2.boot','del.3.boot',
+                'GLMNET',
+                'RF1','RF2','RF3','RF4',
+                'NNRAND',
+                'SVMLIN','SVMRBF',
+                'NN-lg-1','NN-lg-3','NN-lg-5','NN-lg-10',
+                'NN-R-1','NN-R-3','NN-R-5','NN-R-10',
+                'ONN')
+   
    path.UCR.stats <- "G:/Datasets/Classification Datasets/"
    # path.UCR.stats <- "E:/JRC-2022/Classification-Summer-2022-JRC/Datasets/UCR/"
    
@@ -77,12 +86,24 @@ if(FALSE) {
    colnames(res.summary.UCR) <- c("Name","N","d",columns)
 }
 
+writexl::write_xlsx(res.summary.UCR %>% as.data.frame(), "C:\\Users\\JYOTISHKA\\Desktop\\UCR-TwoClass-Results-newest.xlsx")
+
 #####################################################################################
-#
-#
+
 ########################################################################## CompCancer
 
-if(FALSE){
+if(TRUE){
+   
+   columns <- c('del.1','del.2','del.3',
+                'del.1.boot','del.2.boot','del.3.boot',
+                'GLMNET',
+                'RF1','RF2','RF3','RF4',
+                'NNRAND',
+                'SVMLIN','SVMRBF',
+                'NN-lg-1','NN-lg-3','NN-lg-5','NN-lg-10',
+                'NN-R-1','NN-R-3','NN-R-5','NN-R-10',
+                'ONN')
+   
    res.summary.CompCancer <- matrix(0, nrow = 3*length(results.CompCancer), 
                                     ncol = length(columns) + 1)
    
@@ -97,6 +118,8 @@ if(FALSE){
    colnames(res.summary.CompCancer) <- c("Name",columns)
 }
 
+writexl::write_xlsx(res.summary.CompCancer %>% as.data.frame(), "C:\\Users\\JYOTISHKA\\Desktop\\CompCancer-TwoClass-Results-newest.xlsx")
+
 #####################################################################################
 
 
@@ -107,7 +130,19 @@ if(FALSE){
 
 ########################################################################## Simulated
 
-if(TRUE){
+if(FALSE){
+   
+   columns <- c('del.1','del.2','del.3',
+                'del.1.boot','del.2.boot','del.3.boot',
+                'BYS',
+                'GLMNET',
+                'RF1','RF2','RF3','RF4',
+                'NNRAND',
+                'SVMLIN','SVMRBF',
+                'NN-lg-1','NN-lg-3','NN-lg-5','NN-lg-10',
+                'NN-R-1','NN-R-3','NN-R-5','NN-R-10',
+                'ONN')
+   
    res.summary.simulated <- matrix(0, nrow = 3*length(results.simulated), 
                                     ncol = length(columns) + 1)
    

@@ -15,16 +15,6 @@ results.UCR <- list.files(path.UCR)
 results.CompCancer <- list.files(path.CompCancer)
 
 
-columns <- c('del.1','del.2','del.3',
-             'del.1.boot','del.2.boot','del.3.boot',
-             'GLMNET',
-             'RF1','RF2','RF3','RF4',
-             'NNRAND',
-             'SVMLIN','SVMRBF',
-             'NN-lg-1','NN-lg-3','NN-lg-5','NN-lg-10',
-             'NN-R-1','NN-R-3','NN-R-5','NN-R-10',
-             'ONN')
-
 ################################################################################# UCR
 
 if(TRUE) {
@@ -86,7 +76,8 @@ if(TRUE) {
    colnames(res.summary.UCR) <- c("Name","N","d",columns)
 }
 
-writexl::write_xlsx(res.summary.UCR %>% as.data.frame(), "C:\\Users\\JYOTISHKA\\Desktop\\UCR-TwoClass-Results-newest.xlsx")
+writexl::write_xlsx(res.summary.UCR %>% as.data.frame(), "C:\\Users\\JYOTISHKA\\Desktop\\RES-newest\\UCR-TwoClass-Results-newest.xlsx")
+
 
 #####################################################################################
 

@@ -1,5 +1,4 @@
 
-
 library(doParallel)
 library(magrittr)
 library(readxl)
@@ -15,11 +14,17 @@ library(class)             #### One Nearest Neighbour
 
 # start.time <- proc.time()
 
-no.cores <- round(detectCores()*0.75)
+no.cores <- round(detectCores()*0.83)
 cl <- makeCluster(spec = no.cores, type = 'PSOCK')
 registerDoParallel(cl)
 
-#################
+# rho <- function(a,b,c){
+#    if (prod(a == c)== 1 || prod(b == c) == 1){
+#       return(0)
+#    }else{
+#       return(acos(sum((a-c)*(b-c)) / sqrt(sum((a-c)^2) * sum((b-c)^2))) / pi)
+#    }
+# }
 
 rho <- function(a,b,c){
    if (prod(a == c)== 1 || prod(b == c) == 1){
@@ -30,10 +35,18 @@ rho <- function(a,b,c){
    }
 }
 
-#################
+
+
+
+# rho.hat <- function(){
+#    ## There's nothing here
+# }
+
+
+# error.prop <- c()
+
 
 classify.parallel <- function(Z, X, Y, T.FF, T.GG, T.FG, W, S_FG){
-   
    # print("Classification starting")
    R <- nrow(Z)
    Q <- rbind(X,Y)
@@ -111,95 +124,38 @@ classify.parallel <- function(Z, X, Y, T.FF, T.GG, T.FG, W, S_FG){
    return(prac.label)
 }
 
-#################
-
-labels.rename <- function(X){
-   
-   X <- as.matrix(X)
-   
-   if (length(setdiff(unique(X[,1]), 1:length(unique(X[,1])))) == 0) {
-      return(X)
-   }
-   
-   original.labels <- X[,1] %>% as.character()
-   new.label.names <- 1 : length(unique(original.labels))
-   
-   X[,1] <- new.label.names[as.factor(original.labels)] %>% as.numeric()
-   
-   return(X)
-}
-
-#################
 
 clusterEvalQ(cl, {library(magrittr)})
 clusterExport(cl, ls())
 
-#################
-
-JMLR.UCR <- c("FiftyWords","ACSF1","Adiac","Arrowhead","Beef","BeetleFly",
-              "BirdChicken","Car","CBF","CinCECGtorso","Coffee","Computers",
-              "CricketX","CricketY","DiatomSizeReduction","DistalPhalanxOutlineAgeGroup",
-              "DistalPhalanxOutlineCorrect","DistalPhalanxTW","Earthquakes","ECG200",
-              "ECGFiveDays","EOGHorizontalSignal","EOGVerticalSignal","EthanolLevel",
-              "FaceFour","FISH","GunPoint1","Ham","Handoutlines","Haptics","Herring",
-              "HouseTwenty","InlineSkate","InsectEPGRegularTrain","ItalyPowerDemand",
-              "LargeKitchenAppliances","Lighting2","Lighting7","MEAT","MedicalImages",
-              "MiddlePhalanxOutlineAgeGroup","MiddlePhalanxOutlineCorrect",
-              "MiddlePhalanxTW","MoteStrain","OliveOil","OSUleaf","PigAirwayPressure",
-              "PigArtPressure","PigCVP","Plane","ProximalPhalanxOutlineAgeGroup",
-              "ProximalPhalanxOutlineCorrect","ProximalPhalanxTW","RefrigerationDevices",
-              "ScreenType","ShapeletSim","ShapesAll","SmallKitchenAppliances",
-              "SonyAIBORobotSurface","SonyAIBORobotSurfaceII","Strawberry","SwedishLeaf",
-              "syntheticcontrol","ToeSegmentation1","ToeSegmentation2","Trace",
-              "TwoLeadECG","Wine","WordsSynonyms","Worms1","WormsTwoClass")
-
-#################
 
 print("Hello")
 
 iterations <- 50
 
-# path <- "G:/Datasets/Classification Datasets/"
-path <- "E:/JRC-2022/Classification-Summer-2022-JRC/Datasets/UCR/"
-
-UCR.stats <- read.csv(paste0(path,"UCR-DataSummary.csv"), stringsAsFactors = FALSE)
-files.TwoClass <- UCR.stats$Name[which(UCR.stats$Class == 2)]
-
-files.TwoClass <- intersect(JMLR.UCR,files.TwoClass)
-
-path.UCR <- paste0(path,"UCRArchive_2018/")
-files.UCR <- list.files(path.UCR)
+path <- "D:/My Documents/Datasets/Microarray Datasets/Gene-Expression-Omnibus/TwoClass/"
+# path <- "E:/JRC-2022/Classification-Summer-2022-JRC/Datasets/CompCancer Database/TwoClass/"
 
 
-for(h in 5:length(files.TwoClass)){
+files <- list.files(path)
+
+for(h in 1:length(files)){
    
    print(h)
-   print(files.TwoClass[h])
+   print(files[h])
    print(Sys.time())
+   start.time <- proc.time()
    
-   start.time.sys <- Sys.time()
-   start.time.proc <- proc.time()
-   
-   init.train.data <- read.delim(paste0(path.UCR, 
-                                        files.TwoClass[h], "/",
-                                        files.TwoClass[h], "_TRAIN.tsv"), 
-                                 header = FALSE, 
-                                 stringsAsFactors = FALSE)
-   
-   init.test.data <- read.delim(paste0(path.UCR, 
-                                       files.TwoClass[h], "/",
-                                       files.TwoClass[h], "_TEST.tsv"), 
-                                header = FALSE, 
-                                stringsAsFactors = FALSE)
-   
-   dataset <- rbind(init.train.data, init.test.data) %>% as.matrix() %>% labels.rename()
-   
-   print("Dataset extracted")
+   dataset <- paste0(path, files[h], "/", files[h]) %>% 
+                  read_delim() %>% 
+                  select(-ID_REF) %>% 
+                  as.matrix() %>%
+                  apply(c(1,2), function(val) as.numeric(val))
    
    N <- nrow(dataset)
    d <- ncol(dataset) - 1
    
-   ground.truth <- dataset[,1] %>% unlist() %>% as.numeric()
+   ground.truth <- dataset[,1] %>% unlist() #%>% as.numeric()
    
    class.1 <- which(ground.truth == 1)
    class.2 <- which(ground.truth == 2)
@@ -217,17 +173,20 @@ for(h in 5:length(files.TwoClass)){
    error.prop.1 <- error.prop.2 <- error.prop.3 <- c()
    res.list <- list()
    
-   ############################################## Our Classifiers START
+   ############################################## Our Classifiers
    
    for(u in 1:iterations){
       
-      if(u %% 1 == 0) print(u)
+      if(u %% 10 == 0) print(u)
+      start.time <- proc.time()
       
       X <- dataset[which(dataset[train.index[[u]],1] == 1), -1]
       Y <- dataset[which(dataset[train.index[[u]],1] == 2), -1]
       Q <- rbind(X,Y)
       
       Z <- dataset[test.index[[u]], -1]     ## Test Observations
+      
+      # if (u %% 1 == 0) {print(u)}
       
       n <- nrow(X)
       m <- nrow(Y)
@@ -293,6 +252,7 @@ for(h in 5:length(files.TwoClass)){
       S_FG <- T.FF - T.GG
       
       
+      
       ########## Test Observations
       
       ground.label <- ground.truth[test.index[[u]]]
@@ -306,13 +266,8 @@ for(h in 5:length(files.TwoClass)){
       error.prop.3[u] <- length(which(ground.label != prac.label[[3]])) / nrow(Z)
    }
    
-   print(Sys.time() - start.time.sys)
    
-   ############################################## Our Classifiers END
-   #
-   #
-   #
-   ############################################## Popular Classifiers START
+   ############################################## Popular Classifiers
    
    result <- foreach(u = 1:iterations,
                      .combine = rbind,
@@ -332,6 +287,8 @@ for(h in 5:length(files.TwoClass)){
          test.label <- dataset[test.index[[u]], 1]
          
          # if (u %% 1 == 0) {print(u)}
+         
+         
          
          
          ################################ GLMNET
@@ -422,19 +379,19 @@ for(h in 5:length(files.TwoClass)){
          targets <- class.ind(c(train.label, test.label))
          
          mdl.nnet.logistic.1 <- nnet(Q[1:(n+m),], targets[1:(n+m),], size = 1,
-                                     decay = 5e-4, maxit = 100, MaxNWts = 30000,
+                                     decay = 5e-4, maxit = 100, MaxNWts = 20000,
                                      linout = FALSE)
          
          mdl.nnet.logistic.3 <- nnet(Q[1:(n+m),], targets[1:(n+m),], size = 3,
-                                     decay = 5e-4, maxit = 100, MaxNWts = 30000,
+                                     decay = 5e-4, maxit = 100, MaxNWts = 20000,
                                      linout = FALSE)
          
          mdl.nnet.logistic.5 <- nnet(Q[1:(n+m),], targets[1:(n+m),], size = 5,
-                                     decay = 5e-4, maxit = 100, MaxNWts = 30000,
+                                     decay = 5e-4, maxit = 100, MaxNWts = 20000,
                                      linout = FALSE)
          
          mdl.nnet.logistic.10 <- nnet(Q[1:(n+m),], targets[1:(n+m),], size = 10,
-                                      decay = 5e-4, maxit = 100, MaxNWts = 30000,
+                                      decay = 5e-4, maxit = 100, MaxNWts = 20000,
                                       linout = FALSE)
          
          p_log_1 <- predict(mdl.nnet.logistic.1, Q[-c(1:(n+m)),])
@@ -451,19 +408,19 @@ for(h in 5:length(files.TwoClass)){
          # ##### ReLU Activation
          
          mdl.nnet.ReLU.1 <- nnet(Q[1:(n+m),], targets[1:(n+m),], size = 1,
-                                 decay = 5e-4, maxit = 100, MaxNWts = 30000,
+                                 decay = 5e-4, maxit = 100, MaxNWts = 20000,
                                  linout = TRUE)
          
          mdl.nnet.ReLU.3 <- nnet(Q[1:(n+m),], targets[1:(n+m),], size = 3,
-                                 decay = 5e-4, maxit = 100, MaxNWts = 30000,
+                                 decay = 5e-4, maxit = 100, MaxNWts = 20000,
                                  linout = TRUE)
          
          mdl.nnet.ReLU.5 <- nnet(Q[1:(n+m),], targets[1:(n+m),], size = 5,
-                                 decay = 5e-4, maxit = 100, MaxNWts = 30000,
+                                 decay = 5e-4, maxit = 100, MaxNWts = 20000,
                                  linout = TRUE)
          
          mdl.nnet.ReLU.10 <- nnet(Q[1:(n+m),], targets[1:(n+m),], size = 10,
-                                  decay = 5e-4, maxit = 100, MaxNWts = 30000,
+                                  decay = 5e-4, maxit = 100, MaxNWts = 20000,
                                   linout = TRUE)
          
          p_ReLU_1 <- predict(mdl.nnet.ReLU.1, Q[-c(1:(n+m)),])
@@ -499,9 +456,6 @@ for(h in 5:length(files.TwoClass)){
          ))
       }
    
-   ############################################## Popular Classifiers END
-   
-   
    result.all <- cbind(error.prop.1, error.prop.2, error.prop.3,
                        as.data.frame(result)) %>% as.data.frame()
    
@@ -520,28 +474,23 @@ for(h in 5:length(files.TwoClass)){
                      apply(result.all, 2, mean), 
                      apply(result.all, 2, sciplot::se))
    
-   # result.folder.path <- "C:\\Users\\JYOTISHKA\\Desktop\\UCR-TwoClass-Results\\"
+   # result.folder.path <- "C:\\Users\\JYOTISHKA\\Desktop\\CompCancer-TwoClass-Results\\"
    
-   result.folder.path <- "E:\\JRC-2022\\Classification-Summer-2022-JRC\\Results\\Real\\UCR\\TwoClass\\"
+   result.folder.path <- "E:\\JRC-2022\\Classification-Summer-2022-JRC\\Results\\Real\\CompCancer\\TwoClass\\"
    
    print(h)
-   print(files.TwoClass[h])
+   print(files[h])
    
    write_xlsx(x = res.list,
-              path = paste0(result.folder.path, files.TwoClass[h],".xlsx"))
+              path = paste0(result.folder.path, files[h]))
    
-   print(Sys.time() - start.time.sys)
-   
-   end.time <- proc.time()[3]- start.time.proc
+   end.time <- proc.time()[3]- start.time
    print(end.time)
 }
 
 
 stopCluster(cl)
 gc()
-
-
-
 
 
 

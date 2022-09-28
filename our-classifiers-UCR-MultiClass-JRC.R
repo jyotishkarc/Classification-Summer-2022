@@ -1,15 +1,8 @@
 
 library(doParallel)
-library(magrittr)
+library(dplyr)
 library(readxl)
 library(writexl)
-
-library(glmnet)            #### GLMNET
-library(RandPro)           #### Random Projection
-library(e1071)             #### SVM (Linear & RBF Kernel)
-library(randomForest)      #### Random Forest
-library(nnet)              #### Neural Networks
-library(class)             #### One Nearest Neighbour
 
 
 # start.time <- proc.time()
@@ -18,13 +11,6 @@ no.cores <- round(detectCores()*0.75)
 cl <- makeCluster(spec = no.cores, type = 'PSOCK')
 registerDoParallel(cl)
 
-# rho <- function(a,b,c){
-#    if (prod(a == c)== 1 || prod(b == c) == 1){
-#       return(0)
-#    }else{
-#       return(acos(sum((a-c)*(b-c)) / sqrt(sum((a-c)^2) * sum((b-c)^2))) / pi)
-#    }
-# }
 
 rho <- function(a,b,c){
    if (prod(a == c)== 1 || prod(b == c) == 1){
@@ -42,7 +28,8 @@ rho <- function(a,b,c){
 
 classify.parallel <- function(Z, X, Y,
                               T.FF, T.GG, T.FG,
-                              W, S_FG){
+                              W, S_FG,
+                              A,B){
    # print("Classification starting")
    R <- nrow(Z)
    Q <- rbind(X,Y)
@@ -104,20 +91,20 @@ classify.parallel <- function(Z, X, Y,
    #### CLASSIFIER 1
    delta1_Z <- L_GZ - L_FZ
    
-   prac.label.1[which(delta1_Z > 0)] <- 1
-   prac.label.1[which(delta1_Z <= 0)] <- 2
+   prac.label.1[which(delta1_Z > 0)] <- A
+   prac.label.1[which(delta1_Z <= 0)] <- B
    
    #### CLASSIFIER 2
    delta2_Z <- W0_FG * delta1_Z + S_FG * S_Z
    
-   prac.label.2[which(delta2_Z > 0)] <- 1
-   prac.label.2[which(delta2_Z <= 0)] <- 2
+   prac.label.2[which(delta2_Z > 0)] <- A
+   prac.label.2[which(delta2_Z <= 0)] <- B
    
    #### CLASSIFIER 3
    delta3_Z <- W0_FG * sign(delta1_Z) + S_FG * sign(S_Z)
    
-   prac.label.3[which(delta3_Z > 0)] <- 1
-   prac.label.3[which(delta3_Z <= 0)] <- 2
+   prac.label.3[which(delta3_Z > 0)] <- A
+   prac.label.3[which(delta3_Z <= 0)] <- B
    
    prac.label <- list(prac.label.1, prac.label.2, prac.label.3)
    
@@ -140,7 +127,7 @@ labels.rename <- function(X){
    
    X[,1] <- new.label.names[as.factor(original.labels)] %>% as.numeric()
    
-   return(X)
+   return(X %>% as.data.frame())
 }
 
 #################
@@ -208,9 +195,15 @@ for(h in 1:length(files.UCR)){
                                 stringsAsFactors = FALSE)
    
    dataset <- rbind(init.train.data, 
-                    init.test.data) %>% as.matrix() %>% labels.rename()
+                    init.test.data) %>% labels.rename() %>% arrange(V1) %>% as.matrix()
    
    J <- dataset[,1] %>% unique() %>% length()
+   
+   ranges <- train.index <- test.index <- prac.label <- list()
+   
+   for(j in 1:J){
+      ranges[[j]] <- which(dataset[,1] == j)
+   }
    
    print("Dataset extracted")
    
@@ -219,6 +212,16 @@ for(h in 1:length(files.UCR)){
    
    classes.mat <- cbind(rep(1:J, each = J), 
                         rep(1:J, times = J)) %>% as.data.frame() %>% filter(V1 < V2)
+   
+   for(u in 1:iterations){
+      
+      train.index[[u]] <- test.index[[u]] <- list()
+      
+      for(j in 1:J){
+         train.index[[u]][[j]] <- sample(ranges[[j]], ceiling(length(ranges[[j]])/2))
+         test.index[[u]][[j]] <- setdiff(ranges[[j]], train.index[[u]][[j]])
+      }
+   }
    
    ground.truth <- dataset[,1] %>% unlist() %>% as.numeric()
    
@@ -242,26 +245,19 @@ for(h in 1:length(files.UCR)){
          B <- classes.mat[ind, 2]
          
          class.A <- which(ground.truth == A)
-         class.B <- which(ground.truth == B)   
+         class.B <- which(ground.truth == B)
          
          n <- round(length(class.A) * 0.5)
          m <- round(length(class.B) * 0.5)
          
-         train.index <- test.index <- list()
-         
-         for(u in 1:iterations){
-            train.index[[u]] <- c(sample(class.A, n), sample(class.B, m))
-            test.index[[u]] <- setdiff(c(class.A, class.B), train.index[[u]])
-         }
-         
          error.prop.1 <- error.prop.2 <- error.prop.3 <- c()
          
          
-         X <- dataset[which(dataset[train.index[[u]],1] == A), -1]
-         Y <- dataset[which(dataset[train.index[[u]],1] == B), -1]
+         X <- dataset[train.index[[u]][[A]], -1]
+         Y <- dataset[train.index[[u]][[B]], -1]
          Q <- rbind(X,Y)
          
-         Z <- dataset[test.index[[u]], -1]     ## Test Observations
+         Z <- dataset[c(test.index[[u]][[A]],test.index[[u]][[B]]), -1]    ## Test Obs.
          
          # if (u %% 1 == 0) {print(u)}
          
@@ -341,9 +337,10 @@ for(h in 1:length(files.UCR)){
          clusterExport(cl, c('Z'))
          
          ############################################################### Classification
-         prac.label <- classify.parallel(Z, X, Y,
-                                         T.FF, T.GG, T.FG,
-                                         W, S_FG)
+         prac.label[[ind]] <- classify.parallel(Z, X, Y,
+                                                T.FF, T.GG, T.FG,
+                                                W, S_FG,
+                                                A,B)
          ###############################################################
          
          
@@ -353,6 +350,11 @@ for(h in 1:length(files.UCR)){
          error.prop.2[u] <- length(which(ground.label != prac.label[[2]])) / nrow(Z)
          error.prop.3[u] <- length(which(ground.label != prac.label[[3]])) / nrow(Z)
       }
+      
+      
+      
+      
+      
    }
    
    

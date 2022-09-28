@@ -127,7 +127,7 @@ labels.rename <- function(X){
    
    X[,1] <- new.label.names[as.factor(original.labels)] %>% as.numeric()
    
-   return(X %>% as.data.frame())
+   return(as.data.frame(X))
 }
 
 #################
@@ -195,7 +195,9 @@ for(h in 1:length(files.UCR)){
                                 stringsAsFactors = FALSE)
    
    dataset <- rbind(init.train.data, 
-                    init.test.data) %>% labels.rename() %>% arrange(V1) %>% as.matrix()
+                    init.test.data) %>% labels.rename() %>% 
+                                          as.data.frame() %>% 
+                                          arrange(V1) %>% as.matrix()
    
    J <- dataset[,1] %>% unique() %>% length()
    
@@ -257,7 +259,8 @@ for(h in 1:length(files.UCR)){
          Y <- dataset[train.index[[u]][[B]], -1]
          Q <- rbind(X,Y)
          
-         Z <- dataset[c(test.index[[u]][[A]],test.index[[u]][[B]]), -1]    ## Test Obs.
+         Z <- dataset[c(test.index[[u]][[A]],
+                        test.index[[u]][[B]]), -1]    ## Test Obs.
          
          # if (u %% 1 == 0) {print(u)}
          
@@ -343,12 +346,13 @@ for(h in 1:length(files.UCR)){
                                                 A,B)
          ###############################################################
          
+         res.mat[[A]][[1]] <- prac.label[[ind]][[1]][1:length(test.index[[u]][[A]])]
+         res.mat[[A]][[2]] <- prac.label[[ind]][[2]][1:length(test.index[[u]][[A]])]
+         res.mat[[A]][[3]] <- prac.label[[ind]][[3]][1:length(test.index[[u]][[A]])]
          
-         
-         
-         error.prop.1[u] <- length(which(ground.label != prac.label[[1]])) / nrow(Z)
-         error.prop.2[u] <- length(which(ground.label != prac.label[[2]])) / nrow(Z)
-         error.prop.3[u] <- length(which(ground.label != prac.label[[3]])) / nrow(Z)
+         res.mat[[B]][[1]] <- prac.label[[ind]][[1]][1:length(test.index[[u]][[B]])]
+         res.mat[[B]][[2]] <- prac.label[[ind]][[2]][1:length(test.index[[u]][[B]])]
+         res.mat[[B]][[3]] <- prac.label[[ind]][[3]][1:length(test.index[[u]][[B]])]
       }
       
       

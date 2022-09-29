@@ -7,7 +7,7 @@ library(writexl)
 
 # start.time <- proc.time()
 
-no.cores <- round(detectCores()*0.75)
+no.cores <- round(detectCores()*0.8)
 cl <- makeCluster(spec = no.cores, type = 'PSOCK')
 registerDoParallel(cl)
 
@@ -21,7 +21,10 @@ rho <- function(a,b,c){
    }
 }
 
-
+Mode <- function(x) {
+   ux <- unique(x)
+   ux[which.max(tabulate(match(x, ux)))]
+}
 
 
 ################################################### Classifier Function for Test Observations
@@ -133,26 +136,7 @@ labels.rename <- function(X){
 #################
 
 clusterEvalQ(cl, {library(magrittr)})
-clusterExport(cl, ls())
-
-#################
-
-JMLR.UCR <- c("FiftyWords","ACSF1","Adiac","Arrowhead","Beef","BeetleFly",
-              "BirdChicken","Car","CBF","CinCECGtorso","Coffee","Computers",
-              "CricketX","CricketY","DiatomSizeReduction","DistalPhalanxOutlineAgeGroup",
-              "DistalPhalanxOutlineCorrect","DistalPhalanxTW","Earthquakes","ECG200",
-              "ECGFiveDays","EOGHorizontalSignal","EOGVerticalSignal","EthanolLevel",
-              "FaceFour","FISH","GunPoint1","Ham","Handoutlines","Haptics","Herring",
-              "HouseTwenty","InlineSkate","InsectEPGRegularTrain","ItalyPowerDemand",
-              "LargeKitchenAppliances","Lighting2","Lighting7","MEAT","MedicalImages",
-              "MiddlePhalanxOutlineAgeGroup","MiddlePhalanxOutlineCorrect",
-              "MiddlePhalanxTW","MoteStrain","OliveOil","OSUleaf","PigAirwayPressure",
-              "PigArtPressure","PigCVP","Plane","ProximalPhalanxOutlineAgeGroup",
-              "ProximalPhalanxOutlineCorrect","ProximalPhalanxTW","RefrigerationDevices",
-              "ScreenType","ShapeletSim","ShapesAll","SmallKitchenAppliances",
-              "SonyAIBORobotSurface","SonyAIBORobotSurfaceII","Strawberry","SwedishLeaf",
-              "syntheticcontrol","ToeSegmentation1","ToeSegmentation2","Trace",
-              "TwoLeadECG","Wine","WordsSynonyms","Worms1","WormsTwoClass")
+# clusterExport(cl, ls())
 
 #################
 
@@ -174,6 +158,7 @@ files.UCR <- list.files(path.UCR)
 time.UCR <- rep(0, length(files.UCR))
 
 for(h in 1:length(files.UCR)){
+   # for(h in 8:8){
    
    print(h)
    print(files.UCR[h])
@@ -196,17 +181,20 @@ for(h in 1:length(files.UCR)){
    
    dataset <- rbind(init.train.data, 
                     init.test.data) %>% labels.rename() %>% 
-                                          as.data.frame() %>% 
-                                          arrange(V1) %>% as.matrix()
+      as.data.frame() %>% 
+      arrange(V1) %>% as.matrix()
    
    J <- dataset[,1] %>% unique() %>% length()
    
-   ranges <- train.index <- test.index <- prac.label <- list()
+   ranges <- train.index <- test.index <- prac.label <- res.mat <- list()
    
    for(j in 1:J){
       ranges[[j]] <- which(dataset[,1] == j)
    }
    
+   if(J == 2){
+      T.mat <- matrix(0, nrow = iterations, ncol = 3)
+   }
    print("Dataset extracted")
    
    N <- nrow(dataset)
@@ -227,20 +215,34 @@ for(h in 1:length(files.UCR)){
    
    ground.truth <- dataset[,1] %>% unlist() %>% as.numeric()
    
+   error.prop <- matrix(0, nrow = iterations, ncol = 3)
    
    for(u in 1:iterations){
       
+      if(u %% 1 == 0){
+         print(u)
+         print(Sys.time())
+      }
       
       res.list <- list()
       
       # cat("Started - Our Classifiers:")
-      print(Sys.time())
       
       ############################################## Our Classifiers
       
+      classes.mat <- classes.mat %>% as.matrix()
       
-      for(ind in 1:nrow(classes.mat)){   
-         if(u %% 1 == 0) print(u)
+      for(j in 1:J){
+         res.mat[[j]] <- list()
+         
+         res.mat[[j]][[1]] <- NA
+         res.mat[[j]][[2]] <- NA
+         res.mat[[j]][[3]] <- NA
+      }
+      
+      for(ind in 1:nrow(classes.mat)){
+         
+         # print(classes.mat[ind,])
          start.time <- proc.time()[3]
          
          A <- classes.mat[ind, 1] 
@@ -252,9 +254,6 @@ for(h in 1:length(files.UCR)){
          n <- round(length(class.A) * 0.5)
          m <- round(length(class.B) * 0.5)
          
-         error.prop.1 <- error.prop.2 <- error.prop.3 <- c()
-         
-         
          X <- dataset[train.index[[u]][[A]], -1]
          Y <- dataset[train.index[[u]][[B]], -1]
          Q <- rbind(X,Y)
@@ -262,12 +261,10 @@ for(h in 1:length(files.UCR)){
          Z <- dataset[c(test.index[[u]][[A]],
                         test.index[[u]][[B]]), -1]    ## Test Obs.
          
-         # if (u %% 1 == 0) {print(u)}
-         
          n <- nrow(X)
          m <- nrow(Y)
          
-         clusterExport(cl, c('X','Y','Q','M','n','m','rho'))
+         clusterExport(cl, c('X','Y','Q','n','m','rho'))
          
          
          ########################################### T.FG
@@ -335,74 +332,83 @@ for(h in 1:length(files.UCR)){
          
          ########## Test Observations
          
-         ground.label <- ground.truth[test.index[[u]]]
-         
          clusterExport(cl, c('Z'))
          
          ############################################################### Classification
-         prac.label[[ind]] <- classify.parallel(Z, X, Y,
-                                                T.FF, T.GG, T.FG,
-                                                W, S_FG,
-                                                A,B)
+         prac.label <- classify.parallel(Z, X, Y, 
+                                         T.FF, T.GG, T.FG,
+                                         W, S_FG,
+                                         A,B)
          ###############################################################
          
-         res.mat[[A]][[1]] <- prac.label[[ind]][[1]][1:length(test.index[[u]][[A]])]
-         res.mat[[A]][[2]] <- prac.label[[ind]][[2]][1:length(test.index[[u]][[A]])]
-         res.mat[[A]][[3]] <- prac.label[[ind]][[3]][1:length(test.index[[u]][[A]])]
+         res.mat[[A]][[1]] <- res.mat[[A]][[1]] %>% 
+            rbind(prac.label[[1]][1:length(test.index[[u]][[A]])]) %>% na.omit()
+         res.mat[[A]][[2]] <- res.mat[[A]][[2]] %>% 
+            rbind(prac.label[[2]][1:length(test.index[[u]][[A]])]) %>% na.omit()
+         res.mat[[A]][[3]] <- res.mat[[A]][[3]] %>% 
+            rbind(prac.label[[3]][1:length(test.index[[u]][[A]])]) %>% na.omit()
          
-         res.mat[[B]][[1]] <- prac.label[[ind]][[1]][1:length(test.index[[u]][[B]])]
-         res.mat[[B]][[2]] <- prac.label[[ind]][[2]][1:length(test.index[[u]][[B]])]
-         res.mat[[B]][[3]] <- prac.label[[ind]][[3]][1:length(test.index[[u]][[B]])]
+         res.mat[[B]][[1]] <- res.mat[[B]][[1]] %>% 
+            rbind(prac.label[[1]][(length(test.index[[u]][[A]]) + 1) :
+                                     (length(test.index[[u]][[A]])+length(test.index[[u]][[B]]))]) %>% na.omit()
+         res.mat[[B]][[2]] <- res.mat[[B]][[2]] %>% 
+            rbind(prac.label[[2]][(length(test.index[[u]][[A]]) + 1) :
+                                     (length(test.index[[u]][[A]])+length(test.index[[u]][[B]]))]) %>% na.omit()
+         res.mat[[B]][[3]] <- res.mat[[B]][[3]] %>% 
+            rbind(prac.label[[3]][(length(test.index[[u]][[A]]) + 1) :
+                                     (length(test.index[[u]][[A]])+length(test.index[[u]][[B]]))]) %>% na.omit()
       }
       
       
+      if(nrow(classes.mat) == 1){
+         T.mat[u, ] <- c(T.FF, T.FG, T.GG)
+      }
       
-      
+      for(g in 1:3){
+         error.prop[u,g] <- sapply(1:J, function(j){
+            sum(apply(res.mat[[j]][[g]], 2, Mode) != j)
+         }) %>% sum() / length(unlist(test.index[[u]]))
+      }
       
    }
    
    
-   
-   
-   
-   cat("Started - Popular Classifiers:")
    print(Sys.time())
    
    ############################################## Popular Classifiers
    
+   result.all <- error.prop
    
-   result.all <- cbind(error.prop.1, error.prop.2, error.prop.3,
-                       as.data.frame(result)) %>% as.data.frame()
-   
-   colnames(result.all) <- c('del.1','del.2','del.3',
-                             'del.1.boot','del.2.boot','del.3.boot',
-                             'GLMNET',
-                             'RF1','RF2','RF3','RF4',
-                             'NNRAND',
-                             'SVMLIN','SVMRBF',
-                             'NN-lg-1','NN-lg-3','NN-lg-5','NN-lg-10',
-                             'NN-R-1','NN-R-3','NN-R-5','NN-R-10',
-                             'ONN')
-   
+   colnames(result.all) <- c('del.1','del.2','del.3')
    rownames(result.all) <- 1:iterations
    
    res.list <- rbind(result.all, rep(NA, ncol(result.all)), 
                      apply(result.all, 2, mean), 
-                     apply(result.all, 2, sciplot::se))
+                     apply(result.all, 2, sciplot::se)) %>% as.data.frame()
    
-   # result.folder.path <- "C:\\Users\\JYOTISHKA\\Desktop\\CompCancer-TwoClass-Results\\"
+   result.folder.path <- "C:\\Users\\JYOTISHKA\\Desktop\\UCR-ALL-Results-newest\\"
    
-   result.folder.path <- "E:\\JRC-2022\\Classification-Summer-2022-JRC\\Results\\Real\\UCR\\TwoClass\\NEWEST\\"
+   # result.folder.path <- "E:\\JRC-2022\\Classification-Summer-2022-JRC\\Results\\Real\\UCR\\UCR-ALL-Results-newest\\"
+   
+   T.mat.folder.path <- paste0(result.folder.path,"UCR-ALL-T-matrix\\")
    
    write_xlsx(x = res.list,
-              path = paste0(result.folder.path, files.TwoClass[h],".xlsx"))
+              path = paste0(result.folder.path, files.UCR[h],"-our.xlsx"))
+   
+   if(J == 2){
+      T.mat <- T.mat %>% as.data.frame()
+      colnames(T.mat) <- c("T_FF","T_FG","T_GG")
+      
+      write_xlsx(x = T.mat,
+                 path = paste0(T.mat.folder.path, files.UCR[h],"-T-matrix.xlsx"))
+   }
    
    end.time <- proc.time()[3]
    time.UCR[h] <- end.time - start.time
    print(time.UCR[h])
    cat("Ended:")
    print(Sys.time())
-   print(files.TwoClass[h])
+   print(files.UCR[h])
    cat("\n\n")
 }
 

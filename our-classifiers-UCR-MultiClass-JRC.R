@@ -148,11 +148,12 @@ path <- "G:/Datasets/Classification Datasets/"
 # path <- "E:/JRC-2022/Classification-Summer-2022-JRC/Datasets/UCR/"
 
 UCR.stats <- read.csv(paste0(path,"UCR-DataSummary.csv"), stringsAsFactors = FALSE)
-# files.TwoClass <- UCR.stats$Name[which(UCR.stats$Class == 2)]
+files.TwoClass <- UCR.stats$Name[which(UCR.stats$Class == 2)]
 # files.TwoClass <- intersect(JMLR.UCR,files.TwoClass)
 
 path.UCR <- paste0(path,"UCRArchive_2018/")
-files.UCR <- list.files(path.UCR)
+# files.UCR <- list.files(path.UCR)
+files.UCR <- files.TwoClass
 
 
 time.UCR <- rep(0, length(files.UCR))
@@ -415,4 +416,8 @@ for(h in 1:length(files.UCR)){
 
 stopCluster(cl)
 gc()
+
+
+
+
 

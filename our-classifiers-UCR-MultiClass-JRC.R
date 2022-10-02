@@ -7,7 +7,7 @@ library(writexl)
 
 # start.time <- proc.time()
 
-no.cores <- round(detectCores()*0.8)
+no.cores <- round(detectCores()*0.75)
 cl <- makeCluster(spec = no.cores, type = 'PSOCK')
 registerDoParallel(cl)
 
@@ -148,13 +148,16 @@ path <- "G:/Datasets/Classification Datasets/"
 # path <- "E:/JRC-2022/Classification-Summer-2022-JRC/Datasets/UCR/"
 
 UCR.stats <- read.csv(paste0(path,"UCR-DataSummary.csv"), stringsAsFactors = FALSE)
-files.TwoClass <- UCR.stats$Name[which(UCR.stats$Class == 2)]
-# files.TwoClass <- intersect(JMLR.UCR,files.TwoClass)
+
+omitted.ID <- c(1,7:9,12:14,16:18,21,23,24,26,27,29,30,33,37,42,44,49,50,
+                53:55,58,62,66,68,75:80,82,85:89,92,96,97,99:104,113:120,126)
+
+# UCR.implement <- UCR.stats[-omitted.ID, ]
+UCR.implement <- UCR.stats[!(UCR.stats$ID %in% omitted.ID), ] %>% arrange(Class)
 
 path.UCR <- paste0(path,"UCRArchive_2018/")
-# files.UCR <- list.files(path.UCR)
-files.UCR <- files.TwoClass
-
+files.UCR.all <- list.files(path.UCR)
+files.UCR <- intersect(UCR.implement$Name, files.UCR.all)
 
 time.UCR <- rep(0, length(files.UCR))
 
@@ -182,8 +185,8 @@ for(h in 1:length(files.UCR)){
    
    dataset <- rbind(init.train.data, 
                     init.test.data) %>% labels.rename() %>% 
-      as.data.frame() %>% 
-      arrange(V1) %>% as.matrix()
+                                          as.data.frame() %>% 
+                                          arrange(V1) %>% as.matrix()
    
    J <- dataset[,1] %>% unique() %>% length()
    
@@ -196,6 +199,7 @@ for(h in 1:length(files.UCR)){
    if(J == 2){
       T.mat <- matrix(0, nrow = iterations, ncol = 3)
    }
+   
    print("Dataset extracted")
    
    N <- nrow(dataset)
@@ -217,6 +221,8 @@ for(h in 1:length(files.UCR)){
    ground.truth <- dataset[,1] %>% unlist() %>% as.numeric()
    
    error.prop <- matrix(0, nrow = iterations, ncol = 3)
+   
+   ############ Independent iterations starting
    
    for(u in 1:iterations){
       
@@ -240,6 +246,8 @@ for(h in 1:length(files.UCR)){
          res.mat[[j]][[2]] <- NA
          res.mat[[j]][[3]] <- NA
       }
+      
+      ########## Lopping over the Jc2 many pairs of classes
       
       for(ind in 1:nrow(classes.mat)){
          
@@ -268,7 +276,7 @@ for(h in 1:length(files.UCR)){
          clusterExport(cl, c('X','Y','Q','n','m','rho'))
          
          
-         ########################################### T.FG
+         ################################# T.FG
          
          ##### T.FG.rho.fun
          T.FG.rho.fun <- function(vec){
@@ -286,7 +294,7 @@ for(h in 1:length(files.UCR)){
             parApply(cl, ., 1, T.FG.rho.fun) %>% sum() / ((n+m)*n*m)
          
          
-         ########################################### T.FF
+         ################################# T.FF
          
          ##### T.FF.rho.fun
          T.FF.rho.fun <- function(vec){
@@ -304,7 +312,7 @@ for(h in 1:length(files.UCR)){
             parApply(cl, ., 1, T.FF.rho.fun) %>% sum() / ((n+m)*n*(n-1))
          
          
-         ########################################### T.GG
+         ################################# T.GG
          
          ##### T.GG.rho.fun
          T.GG.rho.fun <- function(vec){
@@ -336,10 +344,12 @@ for(h in 1:length(files.UCR)){
          clusterExport(cl, c('Z'))
          
          ############################################################### Classification
+         
          prac.label <- classify.parallel(Z, X, Y, 
                                          T.FF, T.GG, T.FG,
                                          W, S_FG,
                                          A,B)
+         
          ###############################################################
          
          res.mat[[A]][[1]] <- res.mat[[A]][[1]] %>% 
@@ -351,13 +361,13 @@ for(h in 1:length(files.UCR)){
          
          res.mat[[B]][[1]] <- res.mat[[B]][[1]] %>% 
             rbind(prac.label[[1]][(length(test.index[[u]][[A]]) + 1) :
-                                     (length(test.index[[u]][[A]])+length(test.index[[u]][[B]]))]) %>% na.omit()
+                  (length(test.index[[u]][[A]])+length(test.index[[u]][[B]]))]) %>% na.omit()
          res.mat[[B]][[2]] <- res.mat[[B]][[2]] %>% 
             rbind(prac.label[[2]][(length(test.index[[u]][[A]]) + 1) :
-                                     (length(test.index[[u]][[A]])+length(test.index[[u]][[B]]))]) %>% na.omit()
+                  (length(test.index[[u]][[A]])+length(test.index[[u]][[B]]))]) %>% na.omit()
          res.mat[[B]][[3]] <- res.mat[[B]][[3]] %>% 
             rbind(prac.label[[3]][(length(test.index[[u]][[A]]) + 1) :
-                                     (length(test.index[[u]][[A]])+length(test.index[[u]][[B]]))]) %>% na.omit()
+                  (length(test.index[[u]][[A]])+length(test.index[[u]][[B]]))]) %>% na.omit()
       }
       
       

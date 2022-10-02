@@ -162,7 +162,6 @@ files.UCR <- intersect(UCR.implement$Name, files.UCR.all)
 time.UCR <- rep(0, length(files.UCR))
 
 for(h in 1:length(files.UCR)){
-   # for(h in 8:8){
    
    print(h)
    print(files.UCR[h])
@@ -170,6 +169,8 @@ for(h in 1:length(files.UCR)){
    
    start.time.sys <- Sys.time()
    start.time.proc <- proc.time()
+   
+   ########## Reading the TRAIN and TEST datasets
    
    init.train.data <- read.delim(paste0(path.UCR, 
                                         files.UCR[h], "/",

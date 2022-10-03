@@ -33,6 +33,7 @@ classify.parallel <- function(Z, X, Y,
                               T.FF, T.GG, T.FG,
                               W, S_FG,
                               A,B){
+   
    # print("Classification starting")
    R <- nrow(Z)
    Q <- rbind(X,Y)
@@ -142,7 +143,7 @@ clusterEvalQ(cl, {library(magrittr)})
 
 print("Hello")
 
-iterations <- 100
+iterations <- 4
 
 path <- "G:/Datasets/Classification Datasets/"
 # path <- "E:/JRC-2022/Classification-Summer-2022-JRC/Datasets/UCR/"
@@ -161,7 +162,8 @@ files.UCR <- intersect(UCR.implement$Name, files.UCR.all)
 
 time.UCR <- rep(0, length(files.UCR))
 
-for(h in 1:length(files.UCR)){
+# for(h in 1:length(files.UCR)){
+for(h in 34:34){
    
    print(h)
    print(files.UCR[h])
@@ -197,9 +199,7 @@ for(h in 1:length(files.UCR)){
       ranges[[j]] <- which(dataset[,1] == j)
    }
    
-   if(J == 2){
-      T.mat <- matrix(0, nrow = iterations, ncol = 3)
-   }
+   T.mat <- list()
    
    print("Dataset extracted")
    
@@ -208,6 +208,10 @@ for(h in 1:length(files.UCR)){
    
    classes.mat <- cbind(rep(1:J, each = J), 
                         rep(1:J, times = J)) %>% as.data.frame() %>% filter(V1 < V2)
+   
+   for(ind in 1:nrow(classes.mat)){
+      T.mat[[ind]] <- matrix(0, nrow = iterations, ncol = 3)
+   }
    
    for(u in 1:iterations){
       
@@ -234,8 +238,6 @@ for(h in 1:length(files.UCR)){
       
       res.list <- list()
       
-      # cat("Started - Our Classifiers:")
-      
       ############################################## Our Classifiers
       
       classes.mat <- classes.mat %>% as.matrix()
@@ -252,7 +254,7 @@ for(h in 1:length(files.UCR)){
       
       for(ind in 1:nrow(classes.mat)){
          
-         # print(classes.mat[ind,])
+         cat(classes.mat[ind,1],"vs",classes.mat[ind,2],"\n")
          start.time <- proc.time()[3]
          
          A <- classes.mat[ind, 1] 
@@ -331,6 +333,11 @@ for(h in 1:length(files.UCR)){
             parApply(cl, ., 1, T.GG.rho.fun) %>% sum() / ((n+m)*m*(m-1))
          
          
+         ########## T.matrix
+         
+         T.mat[[ind]][u, ] <- c(T.FF, T.FG, T.GG)
+         
+         
          ########## W
          W0_FG <- 2 * T.FG - T.FF - T.GG
          W1_FG <- W0_FG^2 / 2 + (T.FF - T.GG)^2 / 2
@@ -349,7 +356,7 @@ for(h in 1:length(files.UCR)){
          prac.label <- classify.parallel(Z, X, Y, 
                                          T.FF, T.GG, T.FG,
                                          W, S_FG,
-                                         A,B)
+                                         A, B)
          
          ###############################################################
          
@@ -372,22 +379,17 @@ for(h in 1:length(files.UCR)){
       }
       
       
-      if(nrow(classes.mat) == 1){
-         T.mat[u, ] <- c(T.FF, T.FG, T.GG)
-      }
-      
       for(g in 1:3){
          error.prop[u,g] <- sapply(1:J, function(j){
             sum(apply(res.mat[[j]][[g]], 2, Mode) != j)
          }) %>% sum() / length(unlist(test.index[[u]]))
       }
-      
    }
    
    
    print(Sys.time())
    
-   ############################################## Popular Classifiers
+   ##############################################
    
    result.all <- error.prop
    
@@ -398,22 +400,26 @@ for(h in 1:length(files.UCR)){
                      apply(result.all, 2, mean), 
                      apply(result.all, 2, sciplot::se)) %>% as.data.frame()
    
-   result.folder.path <- "C:\\Users\\JYOTISHKA\\Desktop\\UCR-ALL-Results-newest\\"
+   # result.folder.path <- "C:\\Users\\JYOTISHKA\\Desktop\\UCR-ALL-Results-newest\\"
+   
+   result.folder.path <- "G:\\Projects\\Prof. Subhajit Dutta (2022)\\Results\\UCR-ALL-Results-newest\\"
    
    # result.folder.path <- "E:\\JRC-2022\\Classification-Summer-2022-JRC\\Results\\Real\\UCR\\UCR-ALL-Results-newest\\"
-   
-   T.mat.folder.path <- paste0(result.folder.path,"UCR-ALL-T-matrix\\")
    
    write_xlsx(x = res.list,
               path = paste0(result.folder.path, files.UCR[h],"-our.xlsx"))
    
-   if(J == 2){
-      T.mat <- T.mat %>% as.data.frame()
-      colnames(T.mat) <- c("T_FF","T_FG","T_GG")
-      
-      write_xlsx(x = T.mat,
-                 path = paste0(T.mat.folder.path, files.UCR[h],"-T-matrix.xlsx"))
+   
+   T.mat.folder.path <- paste0(result.folder.path,"UCR-ALL-T-matrix\\")
+   
+   for(ind in 1:nrow(classes.mat)){
+      colnames(T.mat[[ind]]) <- c("T_FF","T_FG","T_GG")
+      names(T.mat)[[ind]] <- paste0(classes.mat[ind,1]," vs ",classes.mat[ind,2])
    }
+   
+   T.mat.filename <- paste0(T.mat.folder.path, files.UCR[h],"-T-matrix.xlsx")
+
+   export(T.mat, T.mat.filename)
    
    end.time <- proc.time()[3]
    time.UCR[h] <- end.time - start.time

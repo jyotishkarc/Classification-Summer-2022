@@ -159,15 +159,15 @@ files.CC <- union(paste0(CC.implement$Dataset,"_database.xlsx"), files.CC.all)
 
 time.CC <- rep(0, length(files.CC))
 
-# for(h in 1:length(files.CC)){
-for(h in 1:1){
+for(h in 2:length(files.CC)){
+# for(h in 1:1){
    
    print(h)
    print(files.CC[h])
    print(Sys.time())
    
    start.time.sys <- Sys.time()
-   start.time.proc <- proc.time()
+   start.time.proc <- proc.time()[3]
    
    ########## Reading the datasets
    
@@ -410,8 +410,8 @@ for(h in 1:1){
    
    export(T.mat, T.mat.filename)
    
-   end.time <- proc.time()[3]
-   time.CC[h] <- end.time - start.time
+   end.time.proc <- proc.time()[3]
+   time.CC[h] <- end.time.proc - start.time.proc
    print(time.CC[h])
    cat("Ended:")
    print(Sys.time())

@@ -1,6 +1,7 @@
 
 library(doParallel)
 library(dplyr)
+library(stringr)
 library(readxl)
 library(writexl)
 library(rio)
@@ -143,53 +144,39 @@ clusterEvalQ(cl, {library(magrittr)})
 
 print("Hello")
 
-iterations <- 4
+iterations <- 100
 
-path <- "G:/Datasets/UCR Database/"
+path <- "G:/Datasets/CompCancer Database/"
 # path <- "E:/JRC-2022/Classification-Summer-2022-JRC/Datasets/UCR/"
 
-UCR.stats <- read.csv(paste0(path,"UCR-DataSummary.csv"), stringsAsFactors = FALSE)
+CC.stats <- read_excel(paste0(path,"CompCancer-DataSummary.xlsx"))
+CC.implement <- CC.stats %>% arrange(J)
 
-omitted.ID <- c(1,7:9,12:14,16:18,21,23,24,26,27,29,30,33,37,42,44,49,50,
-                53:55,58,62,66,68,75:80,82,85:89,92,96,97,99:104,113:120,126)
+path.CC <- paste0(path,"Database/")
+files.CC.all <- list.files(path.CC)
 
-# UCR.implement <- UCR.stats[-omitted.ID, ]
-UCR.implement <- UCR.stats[!(UCR.stats$ID %in% omitted.ID), ] %>% arrange(Class)
+files.CC <- union(paste0(CC.implement$Dataset,"_database.xlsx"), files.CC.all)
 
-path.UCR <- paste0(path,"UCRArchive_2018/")
-files.UCR.all <- list.files(path.UCR)
-files.UCR <- intersect(UCR.implement$Name, files.UCR.all)
+time.CC <- rep(0, length(files.CC))
 
-time.UCR <- rep(0, length(files.UCR))
-
-# for(h in 1:length(files.UCR)){
-for(h in 34:34){
+# for(h in 1:length(files.CC)){
+for(h in 1:1){
    
    print(h)
-   print(files.UCR[h])
+   print(files.CC[h])
    print(Sys.time())
    
    start.time.sys <- Sys.time()
    start.time.proc <- proc.time()
    
-   ########## Reading the TRAIN and TEST datasets
+   ########## Reading the datasets
    
-   init.train.data <- read.delim(paste0(path.UCR, 
-                                        files.UCR[h], "/",
-                                        files.UCR[h], "_TRAIN.tsv"), 
-                                 header = FALSE, 
-                                 stringsAsFactors = FALSE)
-   
-   init.test.data <- read.delim(paste0(path.UCR, 
-                                       files.UCR[h], "/",
-                                       files.UCR[h], "_TEST.tsv"), 
-                                header = FALSE, 
-                                stringsAsFactors = FALSE)
-   
-   dataset <- rbind(init.train.data, 
-                    init.test.data) %>% labels.rename() %>% 
-                                          as.data.frame() %>% 
-                                          arrange(V1) %>% as.matrix()
+   dataset <- paste0(path.CC, files.CC[h]) %>% 
+                  read_excel() %>% 
+                  arrange(V1) %>%
+                  na.omit() %>%
+                  as.matrix() %>%
+                  apply(c(1,2), function(val) as.numeric(val))
    
    J <- dataset[,1] %>% unique() %>% length()
    
@@ -369,13 +356,13 @@ for(h in 34:34){
          
          res.mat[[B]][[1]] <- res.mat[[B]][[1]] %>% 
             rbind(prac.label[[1]][(length(test.index[[u]][[A]]) + 1) :
-                  (length(test.index[[u]][[A]])+length(test.index[[u]][[B]]))]) %>% na.omit()
+                                     (length(test.index[[u]][[A]])+length(test.index[[u]][[B]]))]) %>% na.omit()
          res.mat[[B]][[2]] <- res.mat[[B]][[2]] %>% 
             rbind(prac.label[[2]][(length(test.index[[u]][[A]]) + 1) :
-                  (length(test.index[[u]][[A]])+length(test.index[[u]][[B]]))]) %>% na.omit()
+                                     (length(test.index[[u]][[A]])+length(test.index[[u]][[B]]))]) %>% na.omit()
          res.mat[[B]][[3]] <- res.mat[[B]][[3]] %>% 
             rbind(prac.label[[3]][(length(test.index[[u]][[A]]) + 1) :
-                  (length(test.index[[u]][[A]])+length(test.index[[u]][[B]]))]) %>% na.omit()
+                                     (length(test.index[[u]][[A]])+length(test.index[[u]][[B]]))]) %>% na.omit()
       }
       
       
@@ -400,33 +387,35 @@ for(h in 34:34){
                      apply(result.all, 2, mean), 
                      apply(result.all, 2, sciplot::se)) %>% as.data.frame()
    
-   # result.folder.path <- "C:\\Users\\JYOTISHKA\\Desktop\\UCR-ALL-Results-newest\\"
-   
-   result.folder.path <- "G:\\Projects\\Prof. Subhajit Dutta (2022)\\Results\\UCR-ALL-Results-newest\\"
+   result.folder.path <- "G:\\Projects\\Prof. Subhajit Dutta (Summer, 2022)\\Results\\CompCancer-ALL-Results-newest\\"
    
    # result.folder.path <- "E:\\JRC-2022\\Classification-Summer-2022-JRC\\Results\\Real\\UCR\\UCR-ALL-Results-newest\\"
    
    write_xlsx(x = res.list,
-              path = paste0(result.folder.path, files.UCR[h],"-our.xlsx"))
+              path = paste0(result.folder.path, 
+                            str_remove(files.CC[h],"_database.xlsx"),
+                            "-our.xlsx"))
    
    
-   T.mat.folder.path <- paste0(result.folder.path,"UCR-ALL-T-matrix\\")
+   T.mat.folder.path <- paste0(result.folder.path,"CompCancer-ALL-T-matrix\\")
    
    for(ind in 1:nrow(classes.mat)){
       colnames(T.mat[[ind]]) <- c("T_FF","T_FG","T_GG")
       names(T.mat)[[ind]] <- paste0(classes.mat[ind,1]," vs ",classes.mat[ind,2])
    }
    
-   T.mat.filename <- paste0(T.mat.folder.path, files.UCR[h],"-T-matrix.xlsx")
-
+   T.mat.filename <- paste0(T.mat.folder.path, 
+                            str_remove(files.CC[h],"_database.xlsx"),
+                            "-T-matrix.xlsx")
+   
    export(T.mat, T.mat.filename)
    
    end.time <- proc.time()[3]
-   time.UCR[h] <- end.time - start.time
-   print(time.UCR[h])
+   time.CC[h] <- end.time - start.time
+   print(time.CC[h])
    cat("Ended:")
    print(Sys.time())
-   print(files.UCR[h])
+   print(files.CC[h])
    cat("\n\n")
 }
 

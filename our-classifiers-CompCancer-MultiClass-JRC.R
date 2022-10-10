@@ -159,7 +159,7 @@ files.CC <- union(paste0(CC.implement$Dataset,"_database.xlsx"), files.CC.all)
 
 time.CC <- rep(0, length(files.CC))
 
-for(h in 2:length(files.CC)){
+for(h in 35:length(files.CC)){
 # for(h in 1:1){
    
    print(h)
@@ -173,8 +173,9 @@ for(h in 2:length(files.CC)){
    
    dataset <- paste0(path.CC, files.CC[h]) %>% 
                   read_excel() %>% 
-                  arrange(V1) %>%
                   na.omit() %>%
+                  labels.rename() %>%
+                  arrange(V1) %>%
                   as.matrix() %>%
                   apply(c(1,2), function(val) as.numeric(val))
    
@@ -356,13 +357,13 @@ for(h in 2:length(files.CC)){
          
          res.mat[[B]][[1]] <- res.mat[[B]][[1]] %>% 
             rbind(prac.label[[1]][(length(test.index[[u]][[A]]) + 1) :
-                                     (length(test.index[[u]][[A]])+length(test.index[[u]][[B]]))]) %>% na.omit()
+               (length(test.index[[u]][[A]])+length(test.index[[u]][[B]]))]) %>% na.omit()
          res.mat[[B]][[2]] <- res.mat[[B]][[2]] %>% 
             rbind(prac.label[[2]][(length(test.index[[u]][[A]]) + 1) :
-                                     (length(test.index[[u]][[A]])+length(test.index[[u]][[B]]))]) %>% na.omit()
+               (length(test.index[[u]][[A]])+length(test.index[[u]][[B]]))]) %>% na.omit()
          res.mat[[B]][[3]] <- res.mat[[B]][[3]] %>% 
             rbind(prac.label[[3]][(length(test.index[[u]][[A]]) + 1) :
-                                     (length(test.index[[u]][[A]])+length(test.index[[u]][[B]]))]) %>% na.omit()
+               (length(test.index[[u]][[A]])+length(test.index[[u]][[B]]))]) %>% na.omit()
       }
       
       

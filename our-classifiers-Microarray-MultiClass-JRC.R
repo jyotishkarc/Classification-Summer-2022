@@ -144,7 +144,7 @@ clusterEvalQ(cl, {library(magrittr)})
 
 print("Hello")
 
-iterations <- 100
+iterations <- 10
 
 path <- "G:/Datasets/Microarray Database/"
 # path <- "E:/JRC-2022/Classification-Summer-2022-JRC/Datasets/UCR/"
@@ -155,14 +155,12 @@ MA.implement <- MA.stats %>% arrange(J)
 path.MA <- paste0(path,"Database/")
 files.MA.all <- list.files(path.MA)
 
-files.MA <- files.MA.all
-
-# files.MA <- union(paste0(MA.implement$Dataset,"_database.xlsx"), files.MA.all)
+files.MA <- union(paste0(MA.implement$Dataset,".csv"), files.MA.all)
 
 time.MA <- rep(0, length(files.MA))
 
-for(h in 1:length(files.MA)){
-# for(h in 1:1){
+# for(h in 1:length(files.MA)){
+for(h in 1:1){
    
    print(h)
    print(files.MA[h])
@@ -174,9 +172,9 @@ for(h in 1:length(files.MA)){
    ########## Reading the datasets
    
    dataset <- paste0(path.MA, files.MA[h]) %>% 
-      read_excel() %>% 
+      read.csv() %>% 
       na.omit() %>%
-      labels.rename() %>%
+      # labels.rename() %>%
       arrange(V1) %>%
       as.matrix() %>%
       apply(c(1,2), function(val) as.numeric(val))

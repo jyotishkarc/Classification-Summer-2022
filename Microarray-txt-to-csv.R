@@ -6,8 +6,8 @@ library(stringr)
 path <- "D:/All Downloads/microarray-tab/"     #### Deleted. Insert a new path if required.
 files <- list.files(path)
 
-# for(h in 1:length(files)){
-for(h in c(14,15,18,21,22)){
+for(h in 1:length(files)){
+# for(h in c(14,15,18,21,22)){
    
    temp.path <- paste0(path,files[h])
    

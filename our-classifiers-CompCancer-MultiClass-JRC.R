@@ -159,8 +159,9 @@ files.CC <- union(paste0(CC.implement$Dataset,"_database.xlsx"), files.CC.all)
 
 time.CC <- rep(0, length(files.CC))
 
-for(h in 35:length(files.CC)){
-# for(h in 1:1){
+# for(h in 35:length(files.CC)){
+# for(h in c(12,30,33)){
+for(h in c(35)){
    
    print(h)
    print(files.CC[h])
@@ -175,6 +176,7 @@ for(h in 35:length(files.CC)){
                   read_excel() %>% 
                   na.omit() %>%
                   labels.rename() %>%
+                  as.data.frame() %>%
                   arrange(V1) %>%
                   as.matrix() %>%
                   apply(c(1,2), function(val) as.numeric(val))
@@ -222,6 +224,8 @@ for(h in 35:length(files.CC)){
       if(u %% 1 == 0){
          print(u)
          print(Sys.time())
+         
+         if(u %% 20 == 0) print(h)
       }
       
       res.list <- list()
@@ -420,6 +424,8 @@ for(h in 35:length(files.CC)){
    cat("\n\n")
 }
 
+
+# 16,20,21,27,29,12,30,33,35
 
 stopCluster(cl)
 gc()

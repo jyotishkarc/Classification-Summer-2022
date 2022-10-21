@@ -4,6 +4,7 @@ library(writexl)
 library(dplyr)
 library(stringr)
 library(rio)
+library(googlesheets4)
 
 path <- "G:/Projects/Prof. Subhajit Dutta (Summer, 2022)/Results/"
 
@@ -147,7 +148,10 @@ if(COMPCANCER == TRUE){
 }
 
 
-
+# res.final <- gs4_create("results-all-classifiers-21-10-2022", 
+#                         sheets = list(UCR = summary.UCR, 
+#                                       CompCancer = summary.CC, 
+#                                       Microarray = summary.MA))
 
 
 

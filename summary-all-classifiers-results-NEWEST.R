@@ -3,6 +3,7 @@ library(readxl)
 library(writexl)
 library(dplyr)
 library(stringr)
+library(rio)
 
 path <- "G:/Projects/Prof. Subhajit Dutta (Summer, 2022)/Results/"
 
@@ -25,7 +26,12 @@ data.summary.CompCancer <- read_excel(paste0(path.datasets,
 data.summary.Microarray <- read_excel(paste0(path.datasets,
                                  "Microarray Database/Microarray-DataSummary.xlsx"))
 
-if(TRUE){
+
+################################################################## UCR
+
+UCR <- FALSE
+
+if(UCR == TRUE){
    
    pop.UCR <- read_excel("D:/All Downloads/UCR - 11.10.2021.xlsx")
    
@@ -57,9 +63,104 @@ if(TRUE){
    colnames(summary.UCR) <- c("Dataset","Class","N","d",
                               "del.1","del.2","del.3",
                               "GLMNET","RP","SVMLIN","SVMRBF","NNet","1NN","SAVG")
-   
-   
 }
+
+
+
+################################################################## Microarray
+
+MICROARRAY <- TRUE
+
+if(MICROARRAY == TRUE){
+   
+   pop.MA <- rio::import_list("D:/All Downloads/RealDataAll.xlsx")$MICROARRAY
+   
+   df.names <- results.Microarray %>% str_remove("-our.xlsx") %>% 
+                                             intersect(pop.MA$datanames)
+   
+   res.all <- matrix(NA, nrow = length(df.names), ncol = 10)
+   dataset.details <- matrix(0, nrow = length(df.names), ncol = 3)
+   
+   for(h in 1:length(df.names)){
+      
+      df.our <- read_excel(paste0(path.Microarray,df.names[h],"-our.xlsx"))
+      res.our <- df.our[102,] %>% as.numeric() %>% sapply(function(x) floor(x*10^5)/10^5)
+      
+      res.pop <- pop.MA %>% filter(datasets == df.names[h])
+      res.pop.targets <- c(res.pop$GLMNET...14, res.pop$RP...15, 
+                           res.pop$SVMlin...16, res.pop$SVMRBF...17, 
+                           res.pop$Nnet...18, res.pop$kNN...21, 
+                           res.pop$SAVG...20) %>% as.numeric()
+      
+      dataset.summary <- data.summary.Microarray %>% filter(Dataset == df.names[h])
+      dataset.details[h,] <- c(as.integer(dataset.summary$J), 
+                               as.integer(dataset.summary$N),
+                               as.integer(dataset.summary$d))
+      
+      res.all[h,] <- c(res.our, res.pop.targets)
+   }
+   
+   summary.MA <- data.frame(df.names, dataset.details, res.all) %>% arrange(X1)
+   colnames(summary.MA) <- c("Dataset","Class","N","d",
+                             "del.1","del.2","del.3",
+                             "GLMNET","RP","SVMLIN","SVMRBF","NNet","1NN","SAVG")
+}
+
+
+
+################################################################## CompCancer
+
+COMPCANCER <- TRUE
+
+if(COMPCANCER == TRUE){
+   
+   pop.CC <- rio::import_list("D:/All Downloads/RealDataAll.xlsx")$COMPCANCER
+   
+   df.names <- results.CompCancer %>% str_remove("-our.xlsx") %>% intersect(pop.CC$datasets)
+   
+   res.all <- matrix(NA, nrow = length(df.names), ncol = 10)
+   dataset.details <- matrix(0, nrow = length(df.names), ncol = 3)
+   
+   for(h in 1:length(df.names)){
+      
+      df.our <- read_excel(paste0(path.CompCancer,df.names[h],"-our.xlsx"))
+      res.our <- df.our[102,] %>% as.numeric() %>% sapply(function(x) floor(x*10^5)/10^5)
+      
+      res.pop <- pop.CC %>% filter(datasets == df.names[h])
+      res.pop.targets <- c(res.pop$GLMNET...2, res.pop$RP...3, 
+                           res.pop$SVMlin...4, res.pop$SVMRBF...5, 
+                           res.pop$Nnet...6, res.pop$kNN...7, 
+                           res.pop$SAVG...16) %>% as.numeric()
+      
+      dataset.summary <- data.summary.CompCancer %>% filter(Dataset == df.names[h])
+      dataset.details[h,] <- c(as.integer(dataset.summary$J), 
+                               as.integer(dataset.summary$N),
+                               as.integer(dataset.summary$d))
+      
+      res.all[h,] <- c(res.our, res.pop.targets)
+   }
+   
+   summary.CC <- data.frame(df.names, dataset.details, res.all) %>% arrange(X1)
+   colnames(summary.CC) <- c("Dataset","Class","N","d",
+                             "del.1","del.2","del.3",
+                             "GLMNET","RP","SVMLIN","SVMRBF","NNet","1NN","SAVG")
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

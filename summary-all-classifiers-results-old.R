@@ -37,21 +37,21 @@ if(TRUE) {
    files.TwoClass <- UCR.stats$Name[which(UCR.stats$Class == 2)]
    
    JMLR.UCR.TwoClass <- c("FiftyWords","ACSF1","Adiac","Arrowhead","Beef","BeetleFly",
-                 "BirdChicken","Car","CBF","CinCECGtorso","Coffee","Computers",
-                 "CricketX","CricketY","DiatomSizeReduction","DistalPhalanxOutlineAgeGroup",
-                 "DistalPhalanxOutlineCorrect","DistalPhalanxTW","Earthquakes","ECG200",
-                 "ECGFiveDays","EOGHorizontalSignal","EOGVerticalSignal","EthanolLevel",
-                 "FaceFour","FISH","GunPoint1","Ham","Handoutlines","Haptics","Herring",
-                 "HouseTwenty","InlineSkate","InsectEPGRegularTrain","ItalyPowerDemand",
-                 "LargeKitchenAppliances","Lighting2","Lighting7","MEAT","MedicalImages",
-                 "MiddlePhalanxOutlineAgeGroup","MiddlePhalanxOutlineCorrect",
-                 "MiddlePhalanxTW","MoteStrain","OliveOil","OSUleaf","PigAirwayPressure",
-                 "PigArtPressure","PigCVP","Plane","ProximalPhalanxOutlineAgeGroup",
-                 "ProximalPhalanxOutlineCorrect","ProximalPhalanxTW","RefrigerationDevices",
-                 "ScreenType","ShapeletSim","ShapesAll","SmallKitchenAppliances",
-                 "SonyAIBORobotSurface","SonyAIBORobotSurfaceII","Strawberry","SwedishLeaf",
-                 "syntheticcontrol","ToeSegmentation1","ToeSegmentation2","Trace",
-                 "TwoLeadECG","Wine","WordsSynonyms","Worms1","WormsTwoClass")
+         "BirdChicken","Car","CBF","CinCECGtorso","Coffee","Computers",
+         "CricketX","CricketY","DiatomSizeReduction","DistalPhalanxOutlineAgeGroup",
+         "DistalPhalanxOutlineCorrect","DistalPhalanxTW","Earthquakes","ECG200",
+         "ECGFiveDays","EOGHorizontalSignal","EOGVerticalSignal","EthanolLevel",
+         "FaceFour","FISH","GunPoint1","Ham","Handoutlines","Haptics","Herring",
+         "HouseTwenty","InlineSkate","InsectEPGRegularTrain","ItalyPowerDemand",
+         "LargeKitchenAppliances","Lighting2","Lighting7","MEAT","MedicalImages",
+         "MiddlePhalanxOutlineAgeGroup","MiddlePhalanxOutlineCorrect",
+         "MiddlePhalanxTW","MoteStrain","OliveOil","OSUleaf","PigAirwayPressure",
+         "PigArtPressure","PigCVP","Plane","ProximalPhalanxOutlineAgeGroup",
+         "ProximalPhalanxOutlineCorrect","ProximalPhalanxTW","RefrigerationDevices",
+         "ScreenType","ShapeletSim","ShapesAll","SmallKitchenAppliances",
+         "SonyAIBORobotSurface","SonyAIBORobotSurfaceII","Strawberry","SwedishLeaf",
+         "syntheticcontrol","ToeSegmentation1","ToeSegmentation2","Trace",
+         "TwoLeadECG","Wine","WordsSynonyms","Worms1","WormsTwoClass")
    
    files.TwoClass.JMLR <- intersect(JMLR.UCR.TwoClass,files.TwoClass)
    

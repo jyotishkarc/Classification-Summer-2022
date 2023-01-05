@@ -6,6 +6,8 @@ library(ggplot2)
 path <- "/Users/aytijhyasaha/Desktop/projects/Classification-Summer-2022/Results/Simulated/"
 files.path <- list.files(path)[1:5]
 
+plt <- list()
+
 for(h in 1:5){
    
    df.list <- rio::import_list(paste0(path, files.path[h]))
@@ -29,7 +31,10 @@ for(h in 1:5){
    }
    
    plt[[h]] <- df.summary[[h]] %>%
-                  ggplot(x = d)
+                  ggplot(aes(x = d)) +
+                  geom_line(aes(y = del.1, color = 'red')) +
+                  geom_line(aes(y = del.2, color = 'blue')) +
+                  geom_line(aes(y = del.3, color = 'green'))
 }
 
 

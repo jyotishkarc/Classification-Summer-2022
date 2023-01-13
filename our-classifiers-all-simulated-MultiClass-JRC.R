@@ -15,9 +15,9 @@ cl <- makeCluster(spec = no.cores, type = 'PSOCK')          ####
 registerDoParallel(cl)                                      ####
 ################################################################
 
-# path.new.results <- "C:\\Users\\JYOTISHKA\\Desktop\\all-classifiers-TwoClass-simulated-new\\"
+path.new.results <- "C:\\Users\\JYOTISHKA\\Desktop\\all-classifiers-TwoClass-simulated-new\\"
 
-path.newest.results <- "E:\\JRC-2022\\Classification-Summer-2022-JRC\\Results\\Simulated\\NEWEST\\MORE FRESH\\"
+# path.newest.results <- "E:\\JRC-2022\\Classification-Summer-2022-JRC\\Results\\Simulated\\NEWEST\\MORE FRESH\\"
 
 
 ################################################################ rho function
@@ -161,8 +161,9 @@ d.seq <- c(5,10,25,50,100,250,500,1000)
 T.mat <- list()
 
 
-for(h in 1:5){
+for(h in c(1,2)){
    
+   cat("example - ",h)
    print(Sys.time())
    
    # file.wrong <- paste0(path.wrong.results,files.wrong[h]) %>% import_list()
@@ -180,11 +181,7 @@ for(h in 1:5){
       
       d <- d.seq[k]
       
-      if(h == 1){
-         iterations <- 50
-      }else{
-         iterations <- 100
-      }
+      iterations <- 100
       
       T.mat[[h]][[k]] <- matrix(NA, nrow = iterations, ncol = 3)
       
@@ -208,12 +205,12 @@ for(h in 1:5){
             Y <- matrix(rcauchy((m+ms)*d, 0, 2), nrow = m+ms, ncol = d, byrow = TRUE)
          }
          
-         if(h == 2){
-            set.seed(u)
-            
-            X <- matrix(rcauchy((n+ns)*d, 0, 1), nrow = n+ns, ncol = d, byrow = TRUE)
-            Y <- matrix(rcauchy((m+ms)*d, 1, 1), nrow = m+ms, ncol = d, byrow = TRUE)
-         }
+         # if(h == 2){
+         #    set.seed(u)
+         #    
+         #    X <- matrix(rcauchy((n+ns)*d, 0, 1), nrow = n+ns, ncol = d, byrow = TRUE)
+         #    Y <- matrix(rcauchy((m+ms)*d, 1, 1), nrow = m+ms, ncol = d, byrow = TRUE)
+         # }
          
          if(h == 3){
             set.seed(u)
@@ -236,15 +233,29 @@ for(h in 1:5){
             Y <- matrix(rnorm((m+ms)*d, 1, sqrt(2)), nrow = m+ms, ncol = d, byrow = TRUE)
          }
          
-         if(h == 5){
+         # if(h == 5){
+         #    set.seed(u)
+         #    
+         #    X <- matrix(rpareto((n + ns) * d, location = 1, shape = 1),
+         #                nrow = n + ns,
+         #                ncol = d,
+         #                byrow = TRUE)
+         #    
+         #    Y <- matrix(rpareto((m + ms) * d, location = 1.25, shape = 1),
+         #                nrow = m + ms,
+         #                ncol = d,
+         #                byrow = TRUE)
+         # }
+         
+         if(h == 2){
             set.seed(u)
             
-            X <- matrix(rpareto((n + ns) * d, location = 1, shape = 1),
+            X <- matrix(rlnorm((n + ns) * d, meanlog = 1, sdlog = 1),
                         nrow = n + ns,
                         ncol = d,
                         byrow = TRUE)
             
-            Y <- matrix(rpareto((m + ms) * d, location = 1.25, shape = 1),
+            Y <- matrix(rlnorm((m + ms) * d, meanlog = 1.25, sdlog = 1),
                         nrow = m + ms,
                         ncol = d,
                         byrow = TRUE)
@@ -380,12 +391,9 @@ for(h in 1:5){
    writexl::write_xlsx(res.list,
                        path = paste0(path.newest.results,"res-", h, ".xlsx"))
    
-   # writexl::write_xlsx(res.list,
-   #                     path = paste0("C:\\Users\\JYOTISHKA\\res-",h,".xlsx"))
+   # rio::export(T.mat[[h]], paste0("E:/JRC-2022/Classification-Summer-2022-JRC/Results/Simulated/NEWEST/MORE FRESH/T-",h,".xlsx"))
    
-   rio::export(T.mat[[h]], paste0("E:/JRC-2022/Classification-Summer-2022-JRC/Results/Simulated/NEWEST/MORE FRESH/T-",h,".xlsx"))
-   
-   # rio::export(T.mat[[h]], paste0("C:/Users/JYOTISHKA/T-",h,".xlsx"))
+   rio::export(T.mat[[h]], paste0("C:/Users/JYOTISHKA/T-",h,".xlsx"))
    
    print(Sys.time())
    cat("\n\n")

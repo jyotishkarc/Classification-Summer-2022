@@ -161,7 +161,7 @@ d.seq <- c(5,10,25,50,100,250,500,1000)
 T.mat <- list()
 
 
-for(h in c(1,2)){
+for(h in c(1:5)){
    
    cat("example - ",h)
    print(Sys.time())
@@ -205,12 +205,12 @@ for(h in c(1,2)){
             Y <- matrix(rcauchy((m+ms)*d, 0, 2), nrow = m+ms, ncol = d, byrow = TRUE)
          }
          
-         # if(h == 2){
-         #    set.seed(u)
-         #    
-         #    X <- matrix(rcauchy((n+ns)*d, 0, 1), nrow = n+ns, ncol = d, byrow = TRUE)
-         #    Y <- matrix(rcauchy((m+ms)*d, 1, 1), nrow = m+ms, ncol = d, byrow = TRUE)
-         # }
+         if(h == 2){
+            set.seed(u)
+
+            X <- matrix(rcauchy((n+ns)*d, 0, 1), nrow = n+ns, ncol = d, byrow = TRUE)
+            Y <- matrix(rcauchy((m+ms)*d, 1, 1), nrow = m+ms, ncol = d, byrow = TRUE)
+         }
          
          if(h == 3){
             set.seed(u)
@@ -247,7 +247,7 @@ for(h in c(1,2)){
          #                byrow = TRUE)
          # }
          
-         if(h == 2){
+         if(h == 5){
             set.seed(u)
             
             X <- matrix(rlnorm((n + ns) * d, meanlog = 1, sdlog = 1),

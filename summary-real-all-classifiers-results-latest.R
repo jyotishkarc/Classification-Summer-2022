@@ -6,12 +6,12 @@ library(stringr)
 library(rio)
 library(googlesheets4)
 
-path <- "G:/Projects/Prof. Subhajit Dutta (Summer, 2022)/Results/all-latest-results-iitk-2022/"
+path <- "G:/Projects/Prof. Subhajit Dutta (Summer, 2022)/Results/"
 
 # path.simulated <- paste0(path, "simulated-ALL-Results-newest/")
 path.UCR <- paste0(path, "UCR/")
 path.CompCancer <- paste0(path, "CompCancer/")
-path.Microarray <- paste0(path, "Microarray/")
+path.Microarray <- paste0(path, "Microarray-ALL-Results-newest/")
 
 results.simulated <- list.files(path.simulated)
 results.UCR <- list.files(path.UCR) %>% setdiff("UCR-ALL-T-matrix")
@@ -30,7 +30,7 @@ data.summary.Microarray <- read_excel(paste0(path.datasets,
 
 ################################################################## UCR
 
-UCR <- TRUE
+UCR <- FALSE
 
 if(UCR == TRUE){
    
@@ -84,7 +84,7 @@ MICROARRAY <- TRUE
 
 if(MICROARRAY == TRUE){
    
-   path.real.data.all <- "G:/Projects/Prof. Subhajit Dutta (Summer, 2022)/Results/RealDataAll.xlsx"
+   path.real.data.all <- "G:/Projects/Prof. Subhajit Dutta (Summer, 2022)/Results/Popular-Classifiers-All-Databases/RealDataAll.xlsx"
    pop.MA <- rio::import_list(path.real.data.all)$MICROARRAY
    
    df.names <- results.Microarray %>% 
@@ -130,6 +130,8 @@ if(MICROARRAY == TRUE){
                              "GLMNET","RP","SVMLIN","SVMRBF","NNet","1NN","SAVG")
 }
 
+gs4_create("results-MA-all-classifiers-31-12-2022",
+           sheets = list(Microarray = summary.MA))
 
 
 ################################################################## CompCancer
@@ -183,6 +185,7 @@ if(COMPCANCER == TRUE){
                              "GLMNET","RP","SVMLIN","SVMRBF","NNet","1NN","SAVG")
 }
 
+##################################################################
 
 res.final <- gs4_create("results-real-all-classifiers-31-12-2022",
                         sheets = list(UCR = summary.UCR,

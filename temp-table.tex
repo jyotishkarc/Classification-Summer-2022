@@ -1,0 +1,115 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{booktabs}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+
+\begin{table}
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tabular}{ccccccccccccc}
+\toprule
+Dataset & Class & N & d & del.1 & del.2 & del.3 & GLMNET & NN.RAND & SVM.LIN & SVM.RBF & N.Net & X1NN\\
+\midrule
+Golub-1999-v1 & 2 & 72 & 1877 & \cellcolor{green}{\textbf{0.04628}} & 0.06285 & \cellcolor{green}{\textbf{0.04628}} & 0.08417 & 0.09056 & 0.06833 & 0.27222 & 0.22778 & 0.06944\\
+Golub-1999-v2 & 3 & 72 & 1877 & \cellcolor{green}{\textbf{0.06885}} & 0.094 & 0.07485 & 0.08378 & 0.14378 & 0.10108 & 0.32946 & 0.75784 & 0.08432\\
+Gordon-2002 & 2 & 181 & 1626 & \cellcolor{green}{\textbf{0.00533}} & 0.00544 & \cellcolor{green}{\textbf{0.00533}} & 0.02484 & 0.03989 & 0.01055 & 0.01989 & 0.10289 & 0.02890\\
+Pomeroy-2002-v2 & 5 & 42 & 1379 & \cellcolor{green}{\textbf{0.18476}} & 0.43904 & 0.33619 & 0.45143 & 0.41857 & 0.26429 & 0.53238 & 0.53810 & 0.27810\\
+West-2001 & 2 & 49 & 1198 & \cellcolor{green}{\textbf{0.14166}} & 0.22875 & 0.16833 & 0.14880 & 0.20480 & 0.1732 & 0.31600 & 0.32680 & 0.25080\\
+Nutt-2003-v1 & 4 & 50 & 1377 & \cellcolor{red}{\textbf{0.31708}} & 0.3675 & 0.39041 & 0.33500 & 0.47958 & \cellcolor{green}{\textbf{0.28583}} & 0.34333 & 0.68125 & 0.43375\\
+Tomlins-2006-v1 & 5 & 104 & 2315 & \cellcolor{red}{\textbf{0.24156}} & 0.30431 & 0.28529 & 0.24350 & 0.47250 & \cellcolor{green}{\textbf{0.209}} & 0.44450 & 0.33550 & 0.37750\\
+\addlinespace
+GSE2191 & 2 & 54 & 12625 & \cellcolor{green}{\textbf{0.34407}} & 0.50666 & 0.51 & 0.35110 & 0.44670 & 0.4096 & 0.45150 & 0.47520 & 0.42370\\
+GSE967 & 2 & 23 & 9945 & \cellcolor{red}{\textbf{0.27272}} & 0.38818 & 0.43181 & 0.27640 & 0.40360 & \cellcolor{green}{\textbf{0.2086}} & 0.44909 & 0.42550 & 0.34550\\
+GSE1577 & 2 & 19 & 15434 & \cellcolor{green}{\textbf{0.06055}} & 0.07333 & \cellcolor{red}{\textbf{0.06056}} & 0.06300 & 0.12440 & 0.0618 & 0.30000 & 0.34670 & 0.11670\\
+GSE89 & 3 & 40 & 5724 & \cellcolor{green}{\textbf{0.1521}} & 0.24263 & \cellcolor{red}{\textbf{0.16526}} & 0.25580 & 0.25250 & 0.2008 & 0.40316 & 0.42630 & 0.17840\\
+\addlinespace
+Computers & 2 & 500 & 720 & 0.38652 & \cellcolor{green}{\textbf{0.36384}} & 0.365 & 0.39104 & 0.42036 & 0.4616 & 0.39948 & 0.46804 & 0.42668\\
+LargeKitchenAppliances & 3 & 750 & 720 & \cellcolor{green}{\textbf{0.40712}} & 0.41128 & 0.42368 & 0.46509 & 0.54445 & 0.56923 & 0.48261 & 0.55557 & 0.47488\\
+RefrigerationDevices & 3 & 750 & 720 & 0.44634 & \cellcolor{green}{\textbf{0.44146}} & 0.44474 & 0.60475 & 0.60533 & 0.64285 & 0.60787 & 0.64205 & 0.57365\\
+SmallKitchenAppliances & 3 & 750 & 720 & 0.41898 & \cellcolor{green}{\textbf{0.39576}} & 0.42757 & 0.41883 & 0.66688 & 0.50843 & 0.51203 & 0.57632 & 0.62283\\
+FaceFour & 4 & 112 & 350 & \cellcolor{red}{\textbf{0.073}} & 0.07854 & \cellcolor{red}{\textbf{0.073}} & 0.08240 & 0.15929 & \cellcolor{green}{\textbf{0.0567}} & 0.07425 & 0.08179 & 0.10418\\
+DodgerLoopDay & 7 & 158 & 288 & \cellcolor{green}{\textbf{0.37679}} & 0.4473 & 0.4223 & 0.54438 & 0.48525 & 0.394 & 0.46648 & 0.71000 & 0.46913\\
+Lightning7 & 7 & 143 & 319 & \cellcolor{red}{\textbf{0.37771}} & 0.38357 & 0.38857 & 0.41200 & 0.44028 & \cellcolor{green}{\textbf{0.3499}} & 0.40155 & 0.43859 & 0.37840\\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\end{document}

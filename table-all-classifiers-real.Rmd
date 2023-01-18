@@ -1,0 +1,63 @@
+---
+output: 
+   pdf_document:
+      keep_tex: true
+header-includes:
+   - \usepackage{booktabs}
+---
+
+
+```{r, echo=FALSE, message=FALSE}
+library(dplyr)
+library(kableExtra)
+
+final.real.data <- read.csv("~/R/R Codes/Classification using Data-Adaptive Energy Distance (Summer, 2022)/Classification-Summer-2022/Results/final-real-data-for-reporting-updated.csv")
+
+linesep <- function(x,y=character()){
+  if(!length(x))
+    return(y)
+  linesep(x[-length(x)], c(rep('',x[length(x)]-1),'\\addlinespace',y))  
+}
+
+df.report <- final.real.data
+
+
+df.report[1,5] <- df.report[1,5] %>% cell_spec("latex", background = "green", bold = T)
+df.report[2,5] <- df.report[2,5] %>% cell_spec("latex", background = "green", bold = T)
+df.report[3,5] <- df.report[3,5] %>% cell_spec("latex", background = "green", bold = T)
+df.report[4,5] <- df.report[4,5] %>% cell_spec("latex", background = "green", bold = T)
+df.report[5,5] <- df.report[5,5] %>% cell_spec("latex", background = "green", bold = T)
+df.report[6,5] <- df.report[6,5] %>% cell_spec("latex", background = "red", bold = T)
+df.report[7,5] <- df.report[7,5] %>% cell_spec("latex", background = "red", bold = T)
+df.report[8,5] <- df.report[8,5] %>% cell_spec("latex", background = "green", bold = T)
+df.report[9,5] <- df.report[9,5] %>% cell_spec("latex", background = "red", bold = T)
+df.report[10,5] <- df.report[10,5] %>% cell_spec("latex", background = "green", bold = T)
+df.report[11,5] <- df.report[11,5] %>% cell_spec("latex", background = "green", bold = T)
+df.report[13,5] <- df.report[13,5] %>% cell_spec("latex", background = "green", bold = T)
+df.report[16,5] <- df.report[16,5] %>% cell_spec("latex", background = "red", bold = T)
+df.report[17,5] <- df.report[17,5] %>% cell_spec("latex", background = "green", bold = T)
+df.report[18,5] <- df.report[18,5] %>% cell_spec("latex", background = "red", bold = T)
+
+df.report[12,6] <- df.report[12,6] %>% cell_spec("latex", background = "green", bold = T)
+df.report[14,6] <- df.report[14,6] %>% cell_spec("latex", background = "green", bold = T)
+df.report[15,6] <- df.report[15,6] %>% cell_spec("latex", background = "green", bold = T)
+
+df.report[1,7] <- df.report[1,7] %>% cell_spec("latex", background = "green", bold = T)
+df.report[3,7] <- df.report[3,7] %>% cell_spec("latex", background = "green", bold = T)
+df.report[10,7] <- df.report[10,7] %>% cell_spec("latex", background = "red", bold = T)
+df.report[11,7] <- df.report[11,7] %>% cell_spec("latex", background = "red", bold = T)
+df.report[16,7] <- df.report[16,7] %>% cell_spec("latex", background = "red", bold = T)
+
+df.report[6,10] <- df.report[6,10] %>% cell_spec("latex", background = "green", bold = T)
+df.report[7,10] <- df.report[7,10] %>% cell_spec("latex", background = "green", bold = T)
+df.report[9,10] <- df.report[9,10] %>% cell_spec("latex", background = "green", bold = T)
+df.report[16,10] <- df.report[16,10] %>% cell_spec("latex", background = "green", bold = T)
+df.report[18,10] <- df.report[18,10] %>% cell_spec("latex", background = "green", bold = T)
+
+
+knitr::kable(df.report, format="latex", booktabs = T, escape = F,
+             # align = rep('c',ncol(df)),
+             align = 'c',
+             linesep = linesep(c(7,4,7))) %>%
+  kable_styling(latex_options = "scale_down")
+```

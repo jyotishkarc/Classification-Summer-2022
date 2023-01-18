@@ -1,0 +1,84 @@
+---
+output: 
+   pdf_document:
+      keep_tex: true
+header-includes:
+   - \usepackage{booktabs}
+---
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(dplyr)
+library(kableExtra)
+library(rio)
+
+final.sim.res <- import_list("Results/Final-Summary-Tables/final-simulated-all-summary-separate.xlsx")
+final.sim.T <- import_list("Results/Final-Summary-Tables/final-simulated-T-summary-d-1000.xlsx")
+
+linesep <- function(x,y=character()){
+  if(!length(x))
+    return(y)
+  linesep(x[-length(x)], c(rep('',x[length(x)]-1),'\\addlinespace',y))  
+}
+```
+
+```{r Ex1, echo=FALSE, message=FALSE, warning=FALSE}
+
+knitr::kable(final.sim.res[[1]], 
+             format="latex", booktabs = TRUE, escape = FALSE, 
+             align = 'c') %>%
+  kable_styling(latex_options = "scale_down") %>%
+  collapse_rows(columns = 1, valign = "middle")
+```
+
+```{r Ex2, echo=FALSE, message=FALSE, warning=FALSE}
+
+knitr::kable(final.sim.res[[2]], 
+             format="latex", booktabs = TRUE, escape = FALSE, 
+             align = 'c') %>%
+  kable_styling(latex_options = "scale_down") %>%
+  collapse_rows(columns = 1, valign = "middle")
+```
+
+```{r Ex3, echo=FALSE, message=FALSE, warning=FALSE}
+
+knitr::kable(final.sim.res[[3]], 
+             format="latex", booktabs = TRUE, escape = FALSE, 
+             align = 'c') %>%
+  kable_styling(latex_options = "scale_down") %>%
+  collapse_rows(columns = 1, valign = "middle")
+```
+
+```{r Ex4, echo=FALSE, message=FALSE, warning=FALSE}
+
+knitr::kable(final.sim.res[[4]], 
+             format="latex", booktabs = TRUE, escape = FALSE, 
+             align = 'c') %>%
+  kable_styling(latex_options = "scale_down") %>%
+  collapse_rows(columns = 1, valign = "middle")
+```
+
+```{r Ex5, echo=FALSE, message=FALSE, warning=FALSE}
+
+knitr::kable(final.sim.res[[5]], 
+             format="latex", booktabs = TRUE, escape = FALSE, 
+             align = 'c') %>%
+  kable_styling(latex_options = "scale_down") %>%
+  collapse_rows(columns = 1, valign = "middle")
+```
+
+
+```{r T-summary-d-1000, echo=FALSE, message=FALSE, warning=FALSE}
+final.sim.T
+
+knitr::kable(final.sim.T, 
+             format="latex", booktabs = TRUE, escape = FALSE, 
+             align = 'c') %>%
+  kable_styling(latex_options = "scale_down") %>%
+  collapse_rows(columns = c(1,5,6), valign = "middle")
+```
+
+
+
+
+

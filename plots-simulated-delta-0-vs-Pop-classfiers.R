@@ -3,7 +3,7 @@ library(rio)
 library(dplyr)
 library(ggplot2)
 
-path.our <- "C:/Users/JYOTISHKA/Desktop/delta0-TwoClass-simulated/"
+path.our <- paste0(getwd(),"/Results/Simulated/delta-0/")
 files.path.our <- list.files(path.our)[1:5]
 
 path.pop <- "C:/Users/JYOTISHKA/Desktop/all-classifiers-TwoClass-simulated-new/"
@@ -15,7 +15,6 @@ files.path.pop <- list.files(path.pop)[1:5]
 ## Ex-4: C(0,1)-vs-C(0,2)           # Order: 2
 ## Ex-5: lgn(1,1)-vs-lgn(1.25,1)    # Order: 3
 
-# examples <- c(5,4,2,1,3)
 examples <- c(3,4,5,2,1)
 
 plt <- df.summary.error <- df.summary.se <- list()
@@ -77,6 +76,7 @@ for(h in 1:5){
                      ggtitle(paste0("Example ",examples[h])) +
                      theme_light() +
                      theme(legend.title = element_blank(),
+                           legend.position = "bottom",
                            plot.title = element_text(face = "bold", hjust = 0.5)) +
                      guides(colour = guide_legend(nrow = 1))
    }
@@ -94,6 +94,8 @@ for(h in 1:5){
 #                   plt[[3]] + ylab(""), 
 #                   ncol = 2, 
 #                   common.legend = TRUE, legend = "bottom")
+
+cat("delta-0 vs Popular Classifiers")
 
 ggpubr::ggarrange(plt[[5]] + ylab("Misclassification Probability"),
                   plt[[4]] + ylab(""), 

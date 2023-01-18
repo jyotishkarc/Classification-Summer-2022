@@ -2,20 +2,22 @@
 library(rio)
 library(dplyr)
 library(ggplot2)
+library(latex2exp)
 
-path.our <- paste0(getwd(),"/Results/Simulated/")
+path.our <- paste0(getwd(),"/Results/Simulated/delta-1,2,3/")
 files.path.our <- list.files(path.our)[1:5]
 
-path.pop <- "C:/Users/JYOTISHKA/Desktop/all-classifiers-TwoClass-simulated-new/"
+# path.pop <- "C:/Users/JYOTISHKA/Desktop/all-classifiers-TwoClass-simulated-new/"
+path.pop <- paste0(getwd(),"/Results/Simulated/Combined-delta-1,2,3-and-Pop/")
 files.path.pop <- list.files(path.pop)[1:5]
 
 ## Ex-1: N(1,1)-vs-N(1,2)           # Order: 5
 ## Ex-2: N(0,3)-vs-t(3)             # Order: 4
-## Ex-3: C(0,1)-vs-C(1,1)           # Order: 1
-## Ex-4: C(0,1)-vs-C(0,2)           # Order: 2
+## Ex-3: C(0,1)-vs-C(1,1)           # Order: 2
+## Ex-4: C(0,1)-vs-C(0,2)           # Order: 1
 ## Ex-5: lgn(1,1)-vs-lgn(1.25,1)    # Order: 3
 
-examples <- c(3,4,5,2,1)
+examples <- c(4,3,5,2,1)
 
 plt <- df.summary.error <- df.summary.se <- list()
 
@@ -54,6 +56,13 @@ for(h in 1:5){
       df.summary.error[[h]]$d <- df.summary.se[[h]]$d <- 1:8
    }
 
+   gg_colors <- c('#0000FF', '#FF0000', '#3DE61A',
+                  'grey1', 
+                  '#FFD13B','darkorange',
+                  'khaki4','hotpink1',
+                  'lightsalmon','lightseagreen')
+                  
+   gg_colors <- setNames(gg_colors, names(df.summary.error[[h]])[-1])
    
    if(TRUE){
       plt[[h]] <- df.summary.error[[h]] %>%
@@ -67,22 +76,23 @@ for(h in 1:5){
                      geom_line(aes(y = value, color = variable), linewidth = 0.9) +
                      geom_errorbar(aes(ymin = value - se, ymax = value + se), width=0.08,
                                  position = position_dodge(0.05)) + 
-                     scale_x_discrete(name = "Dimension",
+                     scale_x_discrete(name = "Dimension (d)",
                                       limits = c("5","10","25","50","100",
                                                  "250","500","1000")) +
-                                      # limits = c(" ","10"," ","50"," ",
-                                      #            "250"," ","1000")) +
-                     scale_color_discrete(labels = c(eval(rlang::parse_exprs("delta[1]")),
+                     scale_color_manual(labels = c(eval(rlang::parse_exprs("delta[1]")),
                                                      eval(rlang::parse_exprs("delta[2]")),
                                                      eval(rlang::parse_exprs("delta[3]")),
                                                      'Bayes',
                                                      'GLMNET','NN-RAND',
                                                      'SVM-Linear','SVM-RBF',
-                                                     'N-Net','1-NN')) +
+                                                     'N-Net','1-NN'),
+                                          values = gg_colors) +
                      ggtitle(paste0("Example ",examples[h])) +
                      theme_light() +
                      theme(legend.title = element_blank(),
-                           plot.title = element_text(face = "bold", hjust = 0.5)) +
+                           legend.position = "bottom",
+                           plot.title = element_text(face = "bold", hjust = 0.5),
+                           axis.title = element_text(face = "bold")) +
                      guides(colour = guide_legend(nrow = 1))
    }
    
@@ -91,8 +101,8 @@ for(h in 1:5){
 
 ## Ex-1: N(1,1)-vs-N(1,2)           # Order: 5
 ## Ex-2: N(0,3)-vs-t(3)             # Order: 4
-## Ex-3: C(0,1)-vs-C(1,1)           # Order: 1
-## Ex-4: C(0,1)-vs-C(0,2)           # Order: 2
+## Ex-3: C(0,1)-vs-C(1,1)           # Order: 2
+## Ex-4: C(0,1)-vs-C(0,2)           # Order: 1
 ## Ex-5: lgn(1,1)-vs-lgn(1.25,1)    # Order: 3
 
 # ggpubr::ggarrange(plt[[4]] + ylab("Misclassification Probability"),
@@ -100,10 +110,14 @@ for(h in 1:5){
 #                   ncol = 2, 
 #                   common.legend = TRUE, legend = "bottom")
 
-ggpubr::ggarrange(plt[[5]] + ylab("Misclassification Probability"),
+cat("delta-1,2,3 vs Popular Classifiers")
+
+# ggpubr::ggarrange(plt[[5]] + ylab(paste0("Misclassification Probability\n",
+#                                   latex2exp::TeX("$\bf{MP}(\\Delta$)"))),
+ggpubr::ggarrange(plt[[5]] + ylab(TeX("$\\textbf{Misclassification~~Probability}~(\\Delta)$")),
                   plt[[4]] + ylab(""), 
-                  plt[[1]] + ylab(""), 
                   plt[[2]] + ylab(""), 
+                  plt[[1]] + ylab(""), 
                   plt[[3]] + ylab(""), 
                   nrow = 1, ncol = 5, 
                   common.legend = TRUE, legend = "bottom")

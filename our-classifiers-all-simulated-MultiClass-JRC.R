@@ -7,7 +7,7 @@ library(rio)
 library(dplyr)
 library(readxl)
 library(writexl)
-library(EnvStats)
+# library(EnvStats)
 
 ################################################################ Multi-threading
 no.cores <- round(detectCores()*0.75)                       ####
@@ -161,7 +161,7 @@ d.seq <- c(5,10,25,50,100,250,500,1000)
 T.mat <- list()
 
 
-for(h in c(1:5)){
+for(h in c(1:1)){
    
    cat("example - ",h)
    print(Sys.time())
@@ -181,7 +181,7 @@ for(h in c(1:5)){
       
       d <- d.seq[k]
       
-      iterations <- 100
+      iterations <- 10
       
       T.mat[[h]][[k]] <- matrix(NA, nrow = iterations, ncol = 3)
       
@@ -196,14 +196,14 @@ for(h in c(1:5)){
          
          # M <- 1000
          
-         if(u %% 5 == 0) {print(u)}
+         if(u %% 1 == 0) {print(u)}
          
-         if(h == 1){
-            set.seed(u)
-            
-            X <- matrix(rcauchy((n+ns)*d, 0, 1), nrow = n+ns, ncol = d, byrow = TRUE)
-            Y <- matrix(rcauchy((m+ms)*d, 0, 2), nrow = m+ms, ncol = d, byrow = TRUE)
-         }
+         # if(h == 1){
+         #    set.seed(u)
+         #    
+         #    X <- matrix(1/(1-runif((n+ns)*d, 0, 1)), nrow = n+ns, ncol = d, byrow = TRUE)
+         #    Y <- matrix(1.25/(1-runif((m+ms)*d, 0, 1)), nrow = m+ms, ncol = d, byrow = TRUE)
+         # }
          
          if(h == 2){
             set.seed(u)
@@ -211,50 +211,50 @@ for(h in c(1:5)){
             X <- matrix(rcauchy((n+ns)*d, 0, 1), nrow = n+ns, ncol = d, byrow = TRUE)
             Y <- matrix(rcauchy((m+ms)*d, 1, 1), nrow = m+ms, ncol = d, byrow = TRUE)
          }
-         
+
          if(h == 3){
             set.seed(u)
-            
+
             X <- matrix(rnorm((n + ns) * d, 0, sqrt(3)),
                         nrow = n + ns,
                         ncol = d,
                         byrow = TRUE)
-            
+
             Y <- matrix(rt((m + ms) * d, df = 3),
                         nrow = m + ms,
                         ncol = d,
                         byrow = TRUE)
          }
-         
+
          if(h == 4){
             set.seed(u)
-            
+
             X <- matrix(rnorm((n+ns)*d, 1, sqrt(1)), nrow = n+ns, ncol = d, byrow = TRUE)
             Y <- matrix(rnorm((m+ms)*d, 1, sqrt(2)), nrow = m+ms, ncol = d, byrow = TRUE)
          }
-         
+
          # if(h == 5){
          #    set.seed(u)
-         #    
+         #
          #    X <- matrix(rpareto((n + ns) * d, location = 1, shape = 1),
          #                nrow = n + ns,
          #                ncol = d,
          #                byrow = TRUE)
-         #    
+         #
          #    Y <- matrix(rpareto((m + ms) * d, location = 1.25, shape = 1),
          #                nrow = m + ms,
          #                ncol = d,
          #                byrow = TRUE)
          # }
-         
+
          if(h == 5){
             set.seed(u)
-            
+
             X <- matrix(rlnorm((n + ns) * d, meanlog = 1, sdlog = 1),
                         nrow = n + ns,
                         ncol = d,
                         byrow = TRUE)
-            
+
             Y <- matrix(rlnorm((m + ms) * d, meanlog = 1.25, sdlog = 1),
                         nrow = m + ms,
                         ncol = d,

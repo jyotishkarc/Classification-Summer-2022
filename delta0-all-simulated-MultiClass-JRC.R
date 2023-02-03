@@ -15,9 +15,9 @@ cl <- makeCluster(spec = no.cores, type = 'PSOCK')          ####
 registerDoParallel(cl)                                      ####
 ################################################################
 
-# path.delta0.results <- "C:\\Users\\JYOTISHKA\\Desktop\\delta0-TwoClass-simulated\\"
+path.delta0.results <- "C:\\Users\\JYOTISHKA\\Desktop\\delta0-TwoClass-simulated\\"
 
-path.delta0.results <- "E:\\JRC-2022\\Classification-Summer-2022-JRC\\Results\\Simulated\\delta-0\\"
+# path.delta0.results <- "E:\\JRC-2022\\Classification-Summer-2022-JRC\\Results\\Simulated\\delta-0\\"
 
 
 ################################################################ rho.0 function
@@ -142,8 +142,8 @@ d.seq <- c(5,10,25,50,100,250,500,1000)
 # T.mat <- list()
 
 
-for(h in 1:5){
-   # for(h in 1:1){
+# for(h in 1:5){
+for(h in 1:1){
    
    print(Sys.time())
    cat("h =",h,"\n\n")
@@ -176,7 +176,8 @@ for(h in 1:5){
          ns <- 100
          ms <- 100
          
-         if(u %% 10 == 0) {print(u)}
+         if(u %% 1 == 0) {print(u)}
+         
          
          if(h == 1){
             set.seed(u)
@@ -214,6 +215,13 @@ for(h in 1:5){
          }
          
          if(h == 5){
+            set.seed(u)
+            
+            X <- matrix(rlnorm((n+ns)*d, 1, 1), nrow = n+ns, ncol = d, byrow = TRUE)
+            Y <- matrix(rlnorm((m+ms)*d, 1.25, 1), nrow = m+ms, ncol = d, byrow = TRUE)
+         }
+         
+         if(h == 6){
             set.seed(u)
             
             X <- matrix(rpareto((n + ns) * d, location = 1, shape = 1),

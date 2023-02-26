@@ -46,84 +46,6 @@ rho <- function(a,b,c){
 # error.prop <- c()
 
 
-# classify.parallel <- function(Z, X, Y, T.FF, T.GG, T.FG, W, S_FG){
-# print("Classification starting")
-R <- nrow(Z)
-Q <- rbind(X,Y)
-n <- nrow(X)
-m <- nrow(Y)
-
-clusterExport(cl, c('R','n','m'), envir = environment())
-
-
-T_FZ.rho.fun <- function(vec){
-   i <- vec[1]
-   j <- vec[2]
-   
-   return(sum(sapply(1:(n+m),function(val){
-      rho(Z[i,],X[j,],Q[val,])
-   })))
-}
-
-index.mat <- cbind(rep(1:R, each = n),rep(1:n, times = R))
-
-T_FZ <- index.mat %>%
-   parApply(cl, ., 1, T_FZ.rho.fun) %>%
-   matrix(nrow = R, ncol = n, byrow = TRUE) %>% 
-   rowMeans() / (n+m-1)
-
-
-T_GZ.rho.fun <- function(vec){
-   i <- vec[1]
-   j <- vec[2]
-   
-   return(sum(sapply(1:(n+m),function(val){
-      rho(Z[i,],Y[j,],Q[val,])
-   })))
-}
-
-index.mat <- cbind(rep(1:R, each = m),rep(1:m, times = R))
-
-T_GZ <- index.mat %>%
-   parApply(cl, ., 1, T_GZ.rho.fun) %>%
-   matrix(nrow = R, ncol = m, byrow = TRUE) %>% 
-   rowMeans() / (n+m-1)
-
-
-L_FZ <- T_FZ - rep(T.FF, R)/2
-L_GZ <- T_GZ - rep(T.GG, R)/2
-
-S_Z <- L_FZ + L_GZ - T.FG
-
-W0_FG <- W[[1]]
-# W1_FG <- W[[2]]
-# W2_FG <- W[[3]]
-
-prac.label.1 <- prac.label.2 <- prac.label.3 <- rep(0, R)
-
-#### CLASSIFIER 1
-delta1_Z <- L_GZ - L_FZ
-
-prac.label.1[which(delta1_Z > 0)] <- 1
-prac.label.1[which(delta1_Z <= 0)] <- 2
-
-#### CLASSIFIER 2
-delta2_Z <- W0_FG * delta1_Z + S_FG * S_Z
-
-prac.label.2[which(delta2_Z > 0)] <- 1
-prac.label.2[which(delta2_Z <= 0)] <- 2
-
-#### CLASSIFIER 3
-delta3_Z <- W0_FG * sign(delta1_Z) + S_FG * sign(S_Z)
-
-prac.label.3[which(delta3_Z > 0)] <- 1
-prac.label.3[which(delta3_Z <= 0)] <- 2
-
-prac.label <- list(prac.label.1, prac.label.2, prac.label.3)
-
-return(prac.label)
-}
-
 ################################################### Classifier Function for Test Observations
 
 classify.parallel <- function(Z, X, Y, B, T.FF, T.GG, T.FG, W, S_FG){
@@ -265,6 +187,7 @@ classify.parallel <- function(Z, X, Y, B, T.FF, T.GG, T.FG, W, S_FG){
    
    return(prac.label)
 }
+
 ##################################################################################
 
 

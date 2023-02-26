@@ -7,7 +7,7 @@ library(rio)
 library(dplyr)
 library(readxl)
 library(writexl)
-# library(EnvStats)
+library(EnvStats)
 
 ################################################################ Multi-threading
 no.cores <- round(detectCores()*0.75)                       ####
@@ -153,7 +153,9 @@ m <- 20
 ns <- 100
 ms <- 100
 
-d.seq <- c(5,10,25,50,100,250,500,1000)
+# d.seq <- c(5,10,25,50,100,250,500,1000)
+# d.seq <- c(5,10,25,50,100,130,160,190,220,250,500,1000)
+d.seq <- seq(130,160,by = 3)
 # d.seq <- c(5,10,25)
 
 ########## 
@@ -163,7 +165,7 @@ T.mat <- list()
 
 for(h in c(1:1)){
    
-   cat("example - ",h)
+   cat("example - ",h,"\n")
    print(Sys.time())
    
    # file.wrong <- paste0(path.wrong.results,files.wrong[h]) %>% import_list()
@@ -172,6 +174,8 @@ for(h in c(1:1)){
    res.list <- T.mat[[h]] <- list()
    
    for(k in 1:length(d.seq)){
+      
+      cat("Dimension =",d.seq[k],"\n")
       
       error.prop.1 <- error.prop.2 <- error.prop.3 <- c()
       
@@ -197,6 +201,20 @@ for(h in c(1:1)){
          # M <- 1000
          
          if(u %% 1 == 0) {print(u)}
+         
+         if(h == 1){
+            set.seed(u)
+
+            X <- matrix(rpareto((n + ns) * d, location = 1, shape = 1),
+                        nrow = n + ns,
+                        ncol = d,
+                        byrow = TRUE)
+
+            Y <- matrix(rpareto((m + ms) * d, location = 1.25, shape = 1),
+                        nrow = m + ms,
+                        ncol = d,
+                        byrow = TRUE)
+         }
          
          # if(h == 1){
          #    set.seed(u)
@@ -375,25 +393,48 @@ for(h in c(1:1)){
       print(proc.time() - start.time)
    }
    
-   res.list <- list("d=5" = res.list[[1]],
-                    "d=10" = res.list[[2]],
-                    "d=25" = res.list[[3]],
-                    "d=50" = res.list[[4]],
-                    "d=100" = res.list[[5]],
-                    "d=250" = res.list[[6]],
-                    "d=500" = res.list[[7]],
-                    "d=1000" = res.list[[8]])
+   names(res.list) <- c("d=5","d=10","d=25","d=50","d=100","d=250","d=500","d=1000")
+   
+   rio::export(res.list, 
+               "C:/Users/JYOTISHKA/Desktop/all-classifiers-TwoClass-simulated-new/res-our.xlsx")
+   
+   # writexl::write_xlsx(res.list,
+   #                     path = paste0(path.newest.results,"res-", h, "-outlier.xlsx"))
+   
+   # res.list <- list("d=5" = res.list[[1]],
+   #                  "d=10" = res.list[[2]],
+   #                  "d=25" = res.list[[3]],
+   #                  "d=50" = res.list[[4]],
+   #                  "d=100" = res.list[[5]],
+   #                  "d=130" = res.list[[6]],
+   #                  "d=160" = res.list[[7]],
+   #                  "d=190" = res.list[[8]],
+   #                  "d=220" = res.list[[9]],
+   #                  "d=250" = res.list[[10]],
+   #                  "d=500" = res.list[[11]],
+   #                  "d=1000" = res.list[[12]]) ## For extended experiments on Pareto
    
    # res.list <- list("d=5" = res.list[[1]],
    #                  "d=10" = res.list[[2]],
    #                  "d=25" = res.list[[3]])
    
-   writexl::write_xlsx(res.list,
-                       path = paste0(path.newest.results,"res-", h, ".xlsx"))
+   
    
    # rio::export(T.mat[[h]], paste0("E:/JRC-2022/Classification-Summer-2022-JRC/Results/Simulated/NEWEST/MORE FRESH/T-",h,".xlsx"))
    
-   rio::export(T.mat[[h]], paste0("C:/Users/JYOTISHKA/T-",h,".xlsx"))
+   T.mat[[h]] <- T.mat[[h]] %>% lapply(function(val){
+      # colnames(val) <- c("T_FF","T_FG","T_GG")
+      return(rbind(val,rep(NA,3),
+                   colMeans(val),
+                   apply(val,2,sciplot::se)))
+   })
+   
+   for(g in 1:length(T.mat[[h]])){
+      colnames(T.mat[[h]][[g]]) <- c("T_FF","T_FG","T_GG")
+   }
+   
+   names(T.mat[[h]]) <- names(res.list)
+   rio::export(T.mat[[h]], paste0("C:/Users/JYOTISHKA/Desktop/T-",h,"-ext.xlsx"))
    
    print(Sys.time())
    cat("\n\n")

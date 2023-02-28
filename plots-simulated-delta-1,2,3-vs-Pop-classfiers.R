@@ -5,19 +5,19 @@ library(ggplot2)
 library(latex2exp)
 
 path.our <- paste0(getwd(),"/Results/Simulated/delta-1,2,3/")
-files.path.our <- list.files(path.our)[1:5]
+files.path.our <- list.files(path.our)[c(1:4,7)]
 
 # path.pop <- "C:/Users/JYOTISHKA/Desktop/all-classifiers-TwoClass-simulated-new/"
 path.pop <- paste0(getwd(),"/Results/Simulated/Combined-delta-1,2,3-and-Pop/")
-files.path.pop <- list.files(path.pop)[1:5]
+files.path.pop <- list.files(path.pop)[c(1:4,7)]
 
-## Ex-1: N(1,1)-vs-N(1,2)           # Order: 5
-## Ex-2: N(0,3)-vs-t(3)             # Order: 4
-## Ex-3: C(0,1)-vs-C(1,1)           # Order: 2
-## Ex-4: C(0,1)-vs-C(0,2)           # Order: 1
-## Ex-5: lgn(1,1)-vs-lgn(1.25,1)    # Order: 3
+## Ex-1: N(1,1)-vs-N(1,2)
+## Ex-2: N(0,3)-vs-t(3)
+## Ex-3: C(0,1)-vs-C(1,1)
+## Ex-4: C(0,1)-vs-C(0,2)
+## Ex-5: N(1,1)+C(4,1)-vs-N(2,1)+C(4,1)
 
-examples <- c(4,3,5,2,1)
+# examples <- c(4,3,5,2,1)
 
 plt <- df.summary.error <- df.summary.se <- list()
 
@@ -87,7 +87,7 @@ for(h in 1:5){
                                                      'SVM-Linear','SVM-RBF',
                                                      'N-Net','1-NN'),
                                           values = gg_colors) +
-                     ggtitle(paste0("Example ",examples[h])) +
+                     ggtitle(paste0("Example ", h)) +
                      theme_light() +
                      theme(legend.title = element_blank(),
                            legend.position = "bottom",
@@ -114,14 +114,13 @@ cat("delta-1,2,3 vs Popular Classifiers")
 
 # ggpubr::ggarrange(plt[[5]] + ylab(paste0("Misclassification Probability\n",
 #                                   latex2exp::TeX("$\bf{MP}(\\Delta$)"))),
-ggpubr::ggarrange(plt[[5]] + ylab(TeX("$\\textbf{Misclassification~~Probability}~(\\Delta)$")),
-                  plt[[4]] + ylab(""), 
+ggpubr::ggarrange(plt[[1]] + ylab(TeX("$\\textbf{Misclassification~~Probability}~(\\Delta)$")),
                   plt[[2]] + ylab(""), 
-                  plt[[1]] + ylab(""), 
                   plt[[3]] + ylab(""), 
+                  plt[[4]] + ylab(""), 
+                  plt[[5]] + ylab(""), 
                   nrow = 1, ncol = 5, 
                   common.legend = TRUE, legend = "bottom")
-
 
 
 

@@ -7,7 +7,6 @@ library(latex2exp)
 path.our <- paste0(getwd(),"/Results/Simulated/delta-1,2,3/")
 files.path.our <- list.files(path.our)[c(1:4,7)]
 
-# path.pop <- "C:/Users/JYOTISHKA/Desktop/all-classifiers-TwoClass-simulated-new/"
 path.pop <- paste0(getwd(),"/Results/Simulated/Combined-delta-1,2,3-and-Pop/")
 files.path.pop <- list.files(path.pop)[c(1:4,7)]
 
@@ -84,7 +83,7 @@ for(h in 1:5){
                                                      eval(rlang::parse_exprs("delta[3]")),
                                                      'Bayes',
                                                      'GLMNET','NN-RAND',
-                                                     'SVM-Linear','SVM-RBF',
+                                                     'SVM-LIN','SVM-RBF',
                                                      'N-Net','1-NN'),
                                           values = gg_colors) +
                      ggtitle(paste0("Example ", h)) +
@@ -114,7 +113,8 @@ cat("delta-1,2,3 vs Popular Classifiers")
 
 # ggpubr::ggarrange(plt[[5]] + ylab(paste0("Misclassification Probability\n",
 #                                   latex2exp::TeX("$\bf{MP}(\\Delta$)"))),
-ggpubr::ggarrange(plt[[1]] + ylab(TeX("$\\textbf{Misclassification~~Probability}~(\\Delta)$")),
+ggpubr::ggarrange(plt[[1]] + 
+                     ylab(TeX("$\\textbf{Misclassification~~Probability}~(\\Delta)$")),
                   plt[[2]] + ylab(""), 
                   plt[[3]] + ylab(""), 
                   plt[[4]] + ylab(""), 

@@ -7,7 +7,8 @@ library(rio)
 ############################## Error rates with standard errors
 
 path <- paste0(getwd(),"/Results/Simulated/Combined-delta-1,2,3-and-Pop/")
-files <- list.files(path)[1:5]
+examples.target <- c(1:4,7)
+files <- list.files(path)[examples.target]
 
 res.our <- res.pop <- res.all <- list()
 dims <- c(5,10,25,50,100,250,500,1000)
@@ -23,9 +24,9 @@ for(h in 1:5){
       min.nnet.ind <- which.min(temp[[k]][102, 13:20])[1] %>% as.numeric() + 12
       
       res.our[[h]][(2*k-1), ] <- temp[[k]][102, 1:3] %>% 
-                                          as.numeric() %>% round(5) %>% as.character()
+                                          as.numeric() %>% round(4) %>% as.character()
       res.pop[[h]][(2*k-1), ] <- temp[[k]][102, c(4,5,10:12,min.nnet.ind,21)] %>% 
-                                          as.numeric() %>% round(5) %>% as.character()
+                                          as.numeric() %>% round(4) %>% as.character()
       
       res.our[[h]][(2*k), ] <- paste0("(",temp[[k]][103, 1:3] %>% 
                                           as.numeric() %>% round(4),")")
@@ -49,13 +50,15 @@ for(h in 1:5){
 }
 
 #### Separated tables
-res.all.final.separate <- lapply(res.all, function(list.val){
+res.all.final.separate <- res.all %>% lapply(function(list.val){
                                              cbind("d" = rep(dims, each = 2),
                                                    list.val)
                                           })
 
+names(res.all.final.separate) <- examples.target %>% sapply(function(ex) paste0("Ex-",ex))
+
 writexl::write_xlsx(res.all.final.separate, 
-                    paste0("C:\\Users\\JYOTISHKA\\Desktop\\summary-simulated-all-separate.xlsx"))
+                    paste0("C:\\Users\\JYOTISHKA\\Desktop\\summary-simulated-all-separate-new.xlsx"))
 
 #### Combined table
 res.all.final.stacked <- cbind("Example" = rep(1:5, each = 16),
@@ -67,7 +70,7 @@ res.all.final.stacked <- cbind("Example" = rep(1:5, each = 16),
                                            res.all[[5]]))
 
 writexl::write_xlsx(res.all.final.stacked, 
-                    paste0("C:\\Users\\JYOTISHKA\\Desktop\\summary-simulated-all-stacked.xlsx"))
+                    paste0("C:\\Users\\JYOTISHKA\\Desktop\\summary-simulated-all-stacked-new.xlsx"))
 
 
 

@@ -12,8 +12,8 @@ library(dplyr)
 library(kableExtra)
 library(rio)
 
-final.sim.res <- import_list("Results/Final-Summary-Tables/final-simulated-all-summary-separate.xlsx")
-final.sim.T <- import_list("Results/Final-Summary-Tables/final-simulated-T-summary-d-1000.xlsx")
+final.sim.res <- import_list("Results/Final-Summary-Tables/final-simulated-all-summary-separate-new.xlsx")
+final.sim.T <- import_list("Results/Final-Summary-Tables/final-simulated-T-summary-d-1000-new.xlsx")
 
 linesep <- function(x,y=character()){
   if(!length(x))
@@ -24,7 +24,7 @@ linesep <- function(x,y=character()){
 
 ```{r Ex1, echo=FALSE, message=FALSE, warning=FALSE}
 
-knitr::kable(final.sim.res[[1]], 
+knitr::kable(final.sim.res[[1]] %>% relocate(c(del.1,del.2,del.3), .after = last_col()), 
              format="latex", booktabs = TRUE, escape = FALSE, 
              align = 'c') %>%
   kable_styling(latex_options = "scale_down") %>%
@@ -33,7 +33,7 @@ knitr::kable(final.sim.res[[1]],
 
 ```{r Ex2, echo=FALSE, message=FALSE, warning=FALSE}
 
-knitr::kable(final.sim.res[[2]], 
+knitr::kable(final.sim.res[[2]]%>% relocate(c(del.1,del.2,del.3), .after = last_col()), 
              format="latex", booktabs = TRUE, escape = FALSE, 
              align = 'c') %>%
   kable_styling(latex_options = "scale_down") %>%
@@ -42,7 +42,7 @@ knitr::kable(final.sim.res[[2]],
 
 ```{r Ex3, echo=FALSE, message=FALSE, warning=FALSE}
 
-knitr::kable(final.sim.res[[3]], 
+knitr::kable(final.sim.res[[3]]%>% relocate(c(del.1,del.2,del.3), .after = last_col()), 
              format="latex", booktabs = TRUE, escape = FALSE, 
              align = 'c') %>%
   kable_styling(latex_options = "scale_down") %>%
@@ -51,16 +51,16 @@ knitr::kable(final.sim.res[[3]],
 
 ```{r Ex4, echo=FALSE, message=FALSE, warning=FALSE}
 
-knitr::kable(final.sim.res[[4]], 
+knitr::kable(final.sim.res[[4]]%>% relocate(c(del.1,del.2,del.3), .after = last_col()), 
              format="latex", booktabs = TRUE, escape = FALSE, 
              align = 'c') %>%
   kable_styling(latex_options = "scale_down") %>%
   collapse_rows(columns = 1, valign = "middle")
 ```
 
-```{r Ex5, echo=FALSE, message=FALSE, warning=FALSE}
+```{r Ex7, echo=FALSE, message=FALSE, warning=FALSE}
 
-knitr::kable(final.sim.res[[5]], 
+knitr::kable(final.sim.res[[5]]%>% relocate(c(del.1,del.2,del.3), .after = last_col()), 
              format="latex", booktabs = TRUE, escape = FALSE, 
              align = 'c') %>%
   kable_styling(latex_options = "scale_down") %>%
@@ -69,13 +69,13 @@ knitr::kable(final.sim.res[[5]],
 
 
 ```{r T-summary-d-1000, echo=FALSE, message=FALSE, warning=FALSE}
-final.sim.T
-
-knitr::kable(final.sim.T, 
-             format="latex", booktabs = TRUE, escape = FALSE, 
-             align = 'c') %>%
-  kable_styling(latex_options = "scale_down") %>%
-  collapse_rows(columns = c(1,5,6), valign = "middle")
+# # final.sim.T
+# 
+# knitr::kable(final.sim.T, 
+#              format="latex", booktabs = TRUE, escape = FALSE, 
+#              align = 'c') %>%
+#   kable_styling(latex_options = "scale_down") %>%
+#   collapse_rows(columns = c(1,5,6), valign = "middle")
 ```
 
 

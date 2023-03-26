@@ -1,9 +1,10 @@
 ---
-output: 
-   pdf_document:
-      keep_tex: true
-header-includes:
-   - \usepackage{booktabs}
+output:
+  pdf_document:
+    keep_tex: yes
+  html_document:
+    df_print: paged
+header-includes: \usepackage{booktabs}
 ---
 
 
@@ -68,7 +69,7 @@ knitr::kable(df.report, format="latex", booktabs = T, escape = F,
 library(dplyr)
 library(kableExtra)
 
-final.real.data <- read.csv("~/R/R Codes/Classification using Data-Adaptive Energy Distance (Summer, 2022)/Classification-Summer-2022/Results/Final-Summary-Tables/final-real-all-for-reporting.csv")
+frd <- final.real.data <- read.csv("~/R/R Codes/Classification using Data-Adaptive Energy Distance (Summer, 2022)/Classification-Summer-2022/Results/Final-Summary-Tables/final-real-all-for-reporting.csv")
 
 linesep <- function(x,y=character()){
   if(!length(x))
@@ -76,7 +77,17 @@ linesep <- function(x,y=character()){
   linesep(x[-length(x)], c(rep('',x[length(x)]-1),'\\addlinespace',y))  
 }
 
-df.report <- final.real.data
+frd <- final.real.data %>% select(-c(Dataset, Class, N, d))
+
+rows.odd <- seq_len(nrow(frd)) %% 2
+
+frd[rows.odd == 1, ] <- frd[rows.odd == 1, ] * 100
+frd[rows.odd == 0, ] <- frd[rows.odd == 0, ] %>% apply(c(1,2), function(val){
+                                                    return(paste0('(',round(val,4),')'))
+                                                  })
+
+df.report <- cbind(final.real.data %>% select(c(Dataset, Class, N, d)), frd)
+
 
 
 # df.report[1,5] <- df.report[1,5] %>% cell_spec("latex", background = "green", bold = T)
@@ -115,6 +126,6 @@ df.report <- final.real.data
 knitr::kable(df.report, format="latex", booktabs = T, escape = F,
              # align = rep('c',ncol(df)),
              align = 'c',
-             linesep = linesep(c(7,4,7))) %>%
+             linesep = linesep(c(4,4,4))) %>%
   kable_styling(latex_options = "scale_down")
 ```

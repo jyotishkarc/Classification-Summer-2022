@@ -14,7 +14,7 @@ library(class)             #### One Nearest Neighbour
 
 # start.time <- proc.time()
 
-no.cores <- round(detectCores()*0.83)
+no.cores <- round(detectCores()*0.75)
 cl <- makeCluster(spec = no.cores, type = 'PSOCK')
 registerDoParallel(cl)
 
@@ -200,7 +200,7 @@ print("Hello")
 iterations <- 50
 
 # path <- "D:/My Documents/Datasets/CompCancer Database/TwoClass/"
-path <- "E:/JRC-2022/Classification-Summer-2022-JRC/Datasets/CompCancer Database/TwoClass/"
+path <- "D:/My Documents/Datasets/CompCancer Database/Database/"
 
 files <- list.files(path)
 
@@ -463,30 +463,30 @@ for(h in 1:length(files)){
          e_SVM_rbf <- mean(p_1 != test.label)
          
          
-         ################################ Random Forest
-         
-         fit1 <- randomForest(train.sample, as.factor(train.label),
-                              ntree = 5000, mtry = d^0.1)
-         fit2 <- randomForest(train.sample, as.factor(train.label),
-                              ntree = 5000, mtry = d^0.25)
-         fit3 <- randomForest(train.sample, as.factor(train.label),
-                              ntree = 5000, mtry = d^0.5)
-         fit4 <- randomForest(train.sample, as.factor(train.label),
-                              ntree = 5000, mtry = d^0.75)
-         
-         p_1 <- as.numeric(predict(object = fit1, newdata = test.sample,
-                                   type = 'class'))
-         p_2 <- as.numeric(predict(object = fit2, newdata = test.sample,
-                                   type = 'class'))
-         p_3 <- as.numeric(predict(object = fit3, newdata = test.sample,
-                                   type = 'class'))
-         p_4 <- as.numeric(predict(object = fit4, newdata = test.sample,
-                                   type = 'class'))
-         
-         e_RF_1 <- mean(p_1 != test.label)
-         e_RF_2 <- mean(p_2 != test.label)
-         e_RF_3 <- mean(p_3 != test.label)
-         e_RF_4 <- mean(p_4 != test.label)
+         # ################################ Random Forest
+         # 
+         # fit1 <- randomForest(train.sample, as.factor(train.label),
+         #                      ntree = 5000, mtry = d^0.1)
+         # fit2 <- randomForest(train.sample, as.factor(train.label),
+         #                      ntree = 5000, mtry = d^0.25)
+         # fit3 <- randomForest(train.sample, as.factor(train.label),
+         #                      ntree = 5000, mtry = d^0.5)
+         # fit4 <- randomForest(train.sample, as.factor(train.label),
+         #                      ntree = 5000, mtry = d^0.75)
+         # 
+         # p_1 <- as.numeric(predict(object = fit1, newdata = test.sample,
+         #                           type = 'class'))
+         # p_2 <- as.numeric(predict(object = fit2, newdata = test.sample,
+         #                           type = 'class'))
+         # p_3 <- as.numeric(predict(object = fit3, newdata = test.sample,
+         #                           type = 'class'))
+         # p_4 <- as.numeric(predict(object = fit4, newdata = test.sample,
+         #                           type = 'class'))
+         # 
+         # e_RF_1 <- mean(p_1 != test.label)
+         # e_RF_2 <- mean(p_2 != test.label)
+         # e_RF_3 <- mean(p_3 != test.label)
+         # e_RF_4 <- mean(p_4 != test.label)
          
          
          ################################ Neural Networks
@@ -564,7 +564,7 @@ for(h in 1:length(files)){
          ################################
          
          return(c(e_glm,
-                  e_RF_1, e_RF_2, e_RF_3, e_RF_4,
+                  # e_RF_1, e_RF_2, e_RF_3, e_RF_4,
                   e_rnd,
                   e_SVM_lin,
                   e_SVM_rbf,
@@ -579,7 +579,7 @@ for(h in 1:length(files)){
    
    colnames(result.all) <- c('del.1','del.2','del.3',
                              'GLMNET',
-                             'RF1','RF2','RF3','RF4',
+                             # 'RF1','RF2','RF3','RF4',
                              'NNRAND',
                              'SVMLIN','SVMRBF',
                              'NN-lg-1','NN-lg-3','NN-lg-5','NN-lg-10',

@@ -54,7 +54,7 @@ for(h in 1:5){
       
       df.summary.error[[h]]$d <- df.summary.se[[h]]$d <- 1:8
    }
-
+   
    gg_colors <- c('#0000FF', '#FF0000', '#3DE61A',
                   'grey1', 
                   '#FFD13B','darkorange',
@@ -81,8 +81,8 @@ for(h in 1:5){
                      scale_color_manual(labels = c(eval(rlang::parse_exprs("delta[1]")),
                                                      eval(rlang::parse_exprs("delta[2]")),
                                                      eval(rlang::parse_exprs("delta[3]")),
-                                                     'Bayes',
-                                                     'GLMNET','NN-RAND',
+                                                     'BYS',
+                                                     'GLMNET','NN-RP',
                                                      'SVM-LIN','SVM-RBF',
                                                      'N-Net','1-NN'),
                                           values = gg_colors) +

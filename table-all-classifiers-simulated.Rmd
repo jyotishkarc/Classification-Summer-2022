@@ -24,16 +24,35 @@ linesep <- function(x,y=character()){
 
 ```{r Ex1, echo=FALSE, message=FALSE, warning=FALSE}
 
-knitr::kable(final.sim.res[[1]] %>% relocate(c(del.1,del.2,del.3), .after = last_col()), 
+fsd.1 <- final.sim.res[[1]] %>% select(-c(d))
+rows.odd <- seq_len(nrow(fsd.1)) %% 2
+
+fsd.1[rows.odd == 1, ] <- fsd.1[rows.odd == 1, ] %>% 
+                                apply(1:2, function(val) as.numeric(val)) %>% 
+                                round(4) * 100
+
+fsd.1.final <- cbind(final.sim.res[[1]] %>% select(d), fsd.1)
+
+knitr::kable(fsd.1.final %>% relocate(c(del.1,del.2,del.3), .after = last_col()), 
              format="latex", booktabs = TRUE, escape = FALSE, 
              align = 'c') %>%
+  # row_spec(0,bold=TRUE) %>% 
   kable_styling(latex_options = "scale_down") %>%
   collapse_rows(columns = 1, valign = "middle")
 ```
 
 ```{r Ex2, echo=FALSE, message=FALSE, warning=FALSE}
 
-knitr::kable(final.sim.res[[2]]%>% relocate(c(del.1,del.2,del.3), .after = last_col()), 
+fsd.2 <- final.sim.res[[2]] %>% select(-c(d))
+rows.odd <- seq_len(nrow(fsd.2)) %% 2
+
+fsd.2[rows.odd == 1, ] <- fsd.2[rows.odd == 1, ] %>% 
+                                apply(1:2, function(val) as.numeric(val)) %>% 
+                                round(4) * 100
+
+fsd.2.final <- cbind(final.sim.res[[2]] %>% select(d), fsd.2)
+
+knitr::kable(fsd.2.final %>% relocate(c(del.1,del.2,del.3), .after = last_col()), 
              format="latex", booktabs = TRUE, escape = FALSE, 
              align = 'c') %>%
   kable_styling(latex_options = "scale_down") %>%
@@ -42,7 +61,16 @@ knitr::kable(final.sim.res[[2]]%>% relocate(c(del.1,del.2,del.3), .after = last_
 
 ```{r Ex3, echo=FALSE, message=FALSE, warning=FALSE}
 
-knitr::kable(final.sim.res[[3]]%>% relocate(c(del.1,del.2,del.3), .after = last_col()), 
+fsd.3 <- final.sim.res[[3]] %>% select(-c(d))
+rows.odd <- seq_len(nrow(fsd.3)) %% 2
+
+fsd.3[rows.odd == 1, ] <- fsd.3[rows.odd == 1, ] %>% 
+                                apply(1:2, function(val) as.numeric(val)) %>% 
+                                round(4) * 100
+
+fsd.3.final <- cbind(final.sim.res[[3]] %>% select(d), fsd.3)
+
+knitr::kable(fsd.3.final %>% relocate(c(del.1,del.2,del.3), .after = last_col()), 
              format="latex", booktabs = TRUE, escape = FALSE, 
              align = 'c') %>%
   kable_styling(latex_options = "scale_down") %>%
@@ -51,7 +79,16 @@ knitr::kable(final.sim.res[[3]]%>% relocate(c(del.1,del.2,del.3), .after = last_
 
 ```{r Ex4, echo=FALSE, message=FALSE, warning=FALSE}
 
-knitr::kable(final.sim.res[[4]]%>% relocate(c(del.1,del.2,del.3), .after = last_col()), 
+fsd.4 <- final.sim.res[[4]] %>% select(-c(d))
+rows.odd <- seq_len(nrow(fsd.4)) %% 2
+
+fsd.4[rows.odd == 1, ] <- fsd.4[rows.odd == 1, ] %>% 
+                                apply(1:2, function(val) as.numeric(val)) %>% 
+                                round(4) * 100
+
+fsd.4.final <- cbind(final.sim.res[[4]] %>% select(d), fsd.4)
+
+knitr::kable(fsd.4.final %>% relocate(c(del.1,del.2,del.3), .after = last_col()), 
              format="latex", booktabs = TRUE, escape = FALSE, 
              align = 'c') %>%
   kable_styling(latex_options = "scale_down") %>%
@@ -60,7 +97,18 @@ knitr::kable(final.sim.res[[4]]%>% relocate(c(del.1,del.2,del.3), .after = last_
 
 ```{r Ex7, echo=FALSE, message=FALSE, warning=FALSE}
 
-knitr::kable(final.sim.res[[5]]%>% relocate(c(del.1,del.2,del.3), .after = last_col()), 
+#### Infected by outliers
+
+fsd.5 <- final.sim.res[[5]] %>% select(-c(d))
+rows.odd <- seq_len(nrow(fsd.5)) %% 2
+
+fsd.5[rows.odd == 1, ] <- fsd.5[rows.odd == 1, ] %>% 
+                                apply(1:2, function(val) as.numeric(val)) %>% 
+                                round(4) * 100
+
+fsd.5.final <- cbind(final.sim.res[[5]] %>% select(d), fsd.5)
+
+knitr::kable(fsd.5.final %>% relocate(c(del.1,del.2,del.3), .after = last_col()), 
              format="latex", booktabs = TRUE, escape = FALSE, 
              align = 'c') %>%
   kable_styling(latex_options = "scale_down") %>%

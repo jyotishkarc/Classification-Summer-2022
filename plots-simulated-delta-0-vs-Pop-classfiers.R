@@ -71,23 +71,34 @@ for(h in 1:2){
                               as.numeric()) %>%
                      ggplot(aes(x = d)) +
                      geom_line(aes(y = value, color = variable), linewidth = 0.9) +
-                     geom_errorbar(aes(ymin = value - se, ymax = value + se), width=0.08,
-                                   position = position_dodge(0.05)) + 
+                     geom_point(aes(y = value, color = variable)) +
+                     # geom_errorbar(aes(ymin = value - se, ymax = value + se), width=0.08,
+                                   # position = position_dodge(0.05)) +
                      scale_x_discrete(name = "Dimension (d)",
                                       limits = c("5","10","25","50","100",
                                                  "250","500","1000")) +
+                     # scale_x_discrete(name = "Dimension (d)",
+                     #                  limits = c("","10","25","50","",
+                     #                             "250","","1000")) +
+                     # scale_x_log10() +
                      scale_color_manual(labels = c(eval(rlang::parse_exprs("delta[0]")),
                                                    'Bayes',
                                                    'GLMNET','NN-RAND',
                                                    'SVM-LIN','SVM-RBF',
-                                                   'N-Net','1-NN'),
+                                                   'N-NET','1-NN'),
                                         values = gg_colors_0) +
                      ggtitle(paste0("Example ", h)) +
                      theme_light() +
                      theme(legend.title = element_blank(),
-                           legend.position = "bottom",
-                           plot.title = element_text(face = "bold", hjust = 0.5),
-                           axis.title = element_text(face = "bold")) +
+                           legend.text = element_text(#face = "bold", 
+                                                      hjust = 0.5,
+                                                      size = 13),
+                           # legend.position = "bottom",
+                           plot.title = element_text(face = "bold",
+                                                     size = 14,
+                                                     hjust = 0.5),
+                           axis.title = element_text(size = 12, face = "bold"),
+                           axis.text = element_text(size = 13)) +
                      guides(colour = guide_legend(nrow = 1))
    }
    

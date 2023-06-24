@@ -84,14 +84,18 @@ for(h in 1:5){
                                                      'BYS',
                                                      'GLMNET','NN-RP',
                                                      'SVM-LIN','SVM-RBF',
-                                                     'N-Net','1-NN'),
+                                                     'N-NET','1-NN'),
                                           values = gg_colors) +
                      ggtitle(paste0("Example ", h)) +
                      theme_light() +
                      theme(legend.title = element_blank(),
+                           legend.text = element_text(#face = "bold", 
+                                                      hjust = 0.5,
+                                                      size = 14),
                            legend.position = "bottom",
                            plot.title = element_text(face = "bold", hjust = 0.5),
-                           axis.title = element_text(face = "bold")) +
+                           axis.title = element_text(size = 11, face = "bold"),
+                           axis.text = element_text(size = 6.5)) +
                      guides(colour = guide_legend(nrow = 1))
    }
    

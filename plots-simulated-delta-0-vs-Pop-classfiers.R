@@ -93,7 +93,7 @@ for(h in 1:2){
                            legend.text = element_text(#face = "bold", 
                                                       hjust = 0.5,
                                                       size = 13),
-                           # legend.position = "bottom",
+                           legend.position = "bottom",
                            plot.title = element_text(face = "bold",
                                                      size = 14,
                                                      hjust = 0.5),
@@ -119,4 +119,4 @@ ggpubr::ggarrange(plt[[1]] +
                   plt[[2]] + ylab(""),
                   nrow = 1, ncol = 2, 
                   common.legend = TRUE, legend = "bottom")
-
+# 

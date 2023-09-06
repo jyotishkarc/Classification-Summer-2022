@@ -18,7 +18,7 @@ files.path.pop <- list.files(path.pop)[c(1:4,7)]
 
 # examples <- c(4,3,5,2,1)
 
-plt <- df.summary.error <- df.summary.se <- list()
+plt <- df.summary.error <- df.summary.se <- df.summary.error.d <- list()
 
 for(h in 1:5){
    
@@ -64,6 +64,10 @@ for(h in 1:5){
    gg_colors <- setNames(gg_colors, names(df.summary.error[[h]])[-1])
    
    if(TRUE){
+      df.summary.error.d[[h]] <- df.summary.error[[h]]
+      df.summary.error.d[[h]]$d <- c(5,10,25,50,100,250,500,1000)
+      
+      # plt[[h]] <- df.summary.error.d[[h]] %>%
       plt[[h]] <- df.summary.error[[h]] %>%
                      reshape2::melt(id = "d") %>% 
                      cbind("se" = df.summary.se[[h]] %>% 
@@ -72,12 +76,13 @@ for(h in 1:5){
                                     unlist() %>% 
                                     as.numeric()) %>%
                      ggplot(aes(x = d)) +
-                     geom_line(aes(y = value, color = variable), linewidth = 0.9) +
+                     geom_line(aes(y = value, color = variable), linewidth = 0.7) +
                      geom_errorbar(aes(ymin = value - se, ymax = value + se), width=0.08,
                                  position = position_dodge(0.05)) + 
                      scale_x_discrete(name = "Dimension (d)",
                                       limits = c("5","10","25","50","100",
                                                  "250","500","1000")) +
+                     # scale_x_log10() +
                      scale_color_manual(labels = c(eval(rlang::parse_exprs("delta[1]")),
                                                      eval(rlang::parse_exprs("delta[2]")),
                                                      eval(rlang::parse_exprs("delta[3]")),
